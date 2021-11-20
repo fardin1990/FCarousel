@@ -714,6 +714,12 @@
     this.element.classList.remove('is-selected');
     // this.element.setAttribute( 'aria-hidden', 'true' );
   };
+  proto.renderPosition = function(x) {
+    // render position of card with in slider
+    var side = this.parent.originSide;
+    // this.element.style[ side ] = this.parent.getPositionValue( x );
+    this.element.style[side] = Math.round(x) + 'px';
+  };
   proto.getSizes = function () {
     this.getWidth();
     this.getHeight();
@@ -2873,399 +2879,14 @@
 
 
 
-// // steady (static) slide
-// ( function( window, factory ) {
-//   // browser global
-//   window.FCarousel = window.FCarousel || {};
-//   window.FCarousel.StaticSlide = factory();
-
-// }( window, function factory() {
-// 'use strict';
-
-//   function StaticSlide( parent ) {
-//     this.parent = parent;
-//     this.isOriginLeft = parent.originSide == 'left';
-//     this.cards = [];
-//     this.outerWidth = 0;
-//     this.height = 0;
-//   }
-
-//   var proto = StaticSlide.prototype;
-
-//   proto.addCard = function( card ) {
-//     this.cards.push( card );
-//     this.outerWidth += card.size.outerWidth;
-//     this.height = Math.max( card.size.outerHeight, this.height );
-//     // first card stuff
-//     if ( this.cards.length == 1 ) {
-//       this.x = card.x; // x comes from first card
-//       var beginMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
-//       this.firstMargin = card.size[ beginMargin ];
-//     }
-//   };
-
-//   // proto.updateTarget = function() {
-//   //   var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
-//   //   var lastCard = this.getLastCard();
-//   //   var lastMargin = lastCard ? lastCard.size[ endMargin ] : 0;
-//   //   var staticSlideWidth = this.outerWidth - ( this.firstMargin + lastMargin );
-//   //   this.target = this.x + this.firstMargin + staticSlideWidth * this.parent.cardAlign;
-//   // };
-    
-//   proto.updateTarget = function() {
-//     var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
-//     var lastCard = this.getLastCard();
-//     var lastMargin = lastCard ? lastCard.size[ endMargin ] : 0;
-//     var staticSlideWidth = this.outerWidth - ( this.firstMargin + lastMargin );
-//     this.target = this.x + this.firstMargin + staticSlideWidth * this.parent.cardAlign;
-    
-//     if ( !this.parent.options.fade ) {
-//       return;
-//     }
-//     // position cards at selected target
-//     var staticSlideTargetX = this.target - this.x;
-//     var firstCardX = this.cards[0].x;
-//     this.cards.forEach( function( card ) {
-//       var targetX = card.x - firstCardX - staticSlideTargetX;
-//       card.renderPosition( targetX );
-//     });
-//   };
-
-//   proto.getLastCard = function() {
-//     return this.cards[ this.cards.length - 1 ];
-//   };
-
-//   proto.select = function() {
-//     this.cards.forEach( function( card ) {
-//       card.select();
-//     });
-//   };
-
-//   proto.unselect = function() {
-//     this.cards.forEach( function( card ) {
-//       card.unselect();
-//     });
-//   };
-
-//   proto.getCardElements = function() {
-//     return this.cards.map( function( card ) {
-//       return card.element;
-//     });
-//   };
-
-//   return StaticSlide;
-// }));
-
-
-
-// /**
-//  * FCarousel fade v1.0.0
-//  * Fade between FCarousel staticSlides
-//  */
-// /* jshint browser: true, undef: true, unused: true */
-// ( function( window, factory ) {
-//   // browser global
-//   factory(
-//     window.FCarousel,
-//     window.utils
-//   );
-
-// }( this, function factory( FCarousel, utils ) {
-
-//   // ---- StaticSlide ---- //
-//   var StaticSlide = FCarousel.StaticSlide;
-
-
-//   StaticSlide.prototype.setOpacity = function( alpha ) {
-//     this.cards.forEach( function( card ) {
-//       card.element.style.opacity = alpha;
-//     });
-//   };
-
-//   // ---- FCarousel ---- //
-//   var proto = FCarousel.prototype;
-
-//   FCarousel.createMethods.push('_createFade');
-
-//   proto._createFade = function() {
-//     this.fadeIndex = this.selectedIndex;
-//     this.prevSelectedIndex = this.selectedIndex;
-//     this.on( 'select', this.onSelectFade );
-//     this.on( 'dragEnd', this.onDragEndFade );
-//     this.on( 'settle', this.onSettleFade );
-//     this.on( 'activate', this.onActivateFade );
-//     this.on( 'deactivate', this.onDeactivateFade );
-//   };
-
-//   proto.updateStaticSlides = function() {
-//     this.staticSlides = [];
-//     if ( !this.cards.length ) {
-//       return;
-//     }
-  
-//     var staticSlide = new StaticSlide( this );
-//     this.staticSlides.push( staticSlide );
-//     var isOriginLeft = this.originSide == 'left';
-//     var nextMargin = isOriginLeft ? 'marginRight' : 'marginLeft';
-  
-//     var canCardFit = this._getCanCardFit();
-  
-//     this.cards.forEach( function( card, i ) {
-//       // just add card if first card in staticSlide
-//       if ( !staticSlide.cards.length ) {
-//         staticSlide.addCard( card );
-//         return;
-//       }
-  
-//       var staticSlideWidth = ( staticSlide.outerWidth - staticSlide.firstMargin ) +
-//         ( card.size.outerWidth - card.size[ nextMargin ] );
-  
-//       if ( canCardFit.call( this, i, staticSlideWidth ) ) {
-//         staticSlide.addCard( card );
-//       } else {
-//         // doesn't fit, new staticSlide
-//         staticSlide.updateTarget();
-  
-//         staticSlide = new StaticSlide( this );
-//         this.staticSlides.push( staticSlide );
-//         staticSlide.addCard( card );
-//       }
-//     }, this );
-//     // last staticSlide
-//     staticSlide.updateTarget();
-//     // update .selectedSlide
-//     this.updateSelectedSlide();
-    
-    
-//     if ( !this.options.fade ) {
-//       return;
-//     }
-//     // set initial opacity
-//     this.staticSlides.forEach( function( staticSlide, i ) {
-//       var alpha = i == this.selectedIndex ? 1 : 0;
-//       staticSlide.setOpacity( alpha );
-//     }, this );
-//   };
-  
-// proto._getCanCardFit = function() {
-//   var groupCards = this.options.groupCards;
-//   if ( !groupCards ) {
-//     return function() {
-//       return false;
-//     };
-//   } else if ( typeof groupCards == 'number' ) {
-//     // group by number. 3 -> [0,1,2], [3,4,5], ...
-//     var number = parseInt( groupCards, 10 );
-//     return function( i ) {
-//       return ( i % number ) !== 0;
-//     };
-//   }
-//   // default, group by width of staticSlide
-//   // parse '75%
-//   var percentMatch = typeof groupCards == 'string' &&
-//     groupCards.match(/^(\d+)%$/);
-//   var percent = percentMatch ? parseInt( percentMatch[1], 10 ) / 100 : 1;
-//   return function( i, staticSlideWidth ) {
-//     return staticSlideWidth <= ( this.size.innerWidth + 1 ) * percent;
-//   };
-// };
-
-//   /* ---- events ---- */
-
-//   proto.onSelectFade = function() {
-//     // in case of resize, keep fadeIndex within current count
-//     this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
-//     this.prevSelectedIndex = this.selectedIndex;
-//   };
-
-//   proto.onSettleFade = function() {
-//     delete this.didDragEnd;
-//     if ( !this.options.fade ) {
-//       return;
-//     }
-//     // set full and 0 opacity on selected & faded staticSlides
-//     this.selectedStaticSlide.setOpacity( 1 );
-//     var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
-//     if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
-//       this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
-//     }
-//   };
-
-//   proto.onDragEndFade = function() {
-//     // set flag
-//     this.didDragEnd = true;
-//   };
-
-//   proto.onActivateFade = function() {
-//     if ( this.options.fade ) {
-//       this.element.classList.add('is-fade');
-//     }
-//   };
-
-//   proto.onDeactivateFade = function() {
-//     if ( !this.options.fade ) {
-//       return;
-//     }
-//     this.element.classList.remove('is-fade');
-//     // reset opacity
-//     this.staticSlides.forEach( function( staticSlide ) {
-//       staticSlide.setOpacity('');
-//     });
-//   };
-
-//   /* ---- position & fading ---- */
-
-//   var positionSlider = proto.positionSlider;
-//   proto.positionSlider = function() {
-//     if ( !this.options.fade ) {
-//       positionSlider.apply( this, arguments );
-//       return;
-//     }
-
-//     this.fadeStaticSlides();
-//     this.dispatchScrollEvent();
-//   };
-
-//   var positionSliderAtSelected = proto.positionSliderAtSelected;
-//   proto.positionSliderAtSelected = function() {
-//     if ( this.options.fade ) {
-//       // position fade slider at origin
-//       this.setTranslateX( 0 );
-//     }
-//     positionSliderAtSelected.apply( this, arguments );
-//   };
-
-//   proto.fadeStaticSlides = function() {
-//     if ( this.staticSlides.length < 2 ) {
-//       return;
-//     }
-//     // get staticSlides to fade-in & fade-out
-//     var indexes = this.getFadeIndexes();
-//     var fadeStaticSlideA = this.staticSlides[ indexes.a ];
-//     var fadeStaticSlideB = this.staticSlides[ indexes.b ];
-//     var distance = this.wrapDifference( fadeStaticSlideA.target, fadeStaticSlideB.target );
-//     var progress = this.wrapDifference( fadeStaticSlideA.target, -this.x );
-//     progress = progress / distance;
-
-//     fadeStaticSlideA.setOpacity( 1 - progress );
-//     fadeStaticSlideB.setOpacity( progress );
-
-//     // hide previous staticSlide
-//     var fadeHideIndex = indexes.a;
-//     if ( this.isDragging ) {
-//       fadeHideIndex = progress > 0.5 ? indexes.a : indexes.b;
-//     }
-//     var isNewHideIndex = this.fadeHideIndex != undefined &&
-//       this.fadeHideIndex != fadeHideIndex &&
-//       this.fadeHideIndex != indexes.a &&
-//       this.fadeHideIndex != indexes.b;
-//     if ( isNewHideIndex ) {
-//       // new fadeHideStaticSlide set, hide previous
-//       this.staticSlides[ this.fadeHideIndex ].setOpacity( 0 );
-//     }
-//     this.fadeHideIndex = fadeHideIndex;
-//   };
-
-//   proto.getFadeIndexes = function() {
-//     if ( !this.isDragging && !this.didDragEnd ) {
-//       return {
-//         a: this.fadeIndex,
-//         b: this.selectedIndex,
-//       };
-//     }
-//     if ( this.options.wrapAround ) {
-//       return this.getFadeDragWrapIndexes();
-//     } else {
-//       return this.getFadeDragLimitIndexes();
-//     }
-//   };
-
-//   proto.getFadeDragWrapIndexes = function() {
-//     var distances = this.staticSlides.map( function( staticSlide, i ) {
-//       return this.getSlideDistance( -this.x, i );
-//     }, this );
-//     var absDistances = distances.map( function( distance ) {
-//       return Math.abs( distance );
-//     });
-//     var minDistance = Math.min.apply( Math, absDistances );
-//     var closestIndex = absDistances.indexOf( minDistance );
-//     var distance = distances[ closestIndex ];
-//     var len = this.staticSlides.length;
-
-//     var delta = distance >= 0 ? 1 : -1;
-//     return {
-//       a: closestIndex,
-//       b: utils.modulo( closestIndex + delta, len ),
-//     };
-//   };
-
-//   proto.getFadeDragLimitIndexes = function() {
-//     // calculate closest previous staticSlide
-//     var dragIndex = 0;
-//     for ( var i=0; i < this.staticSlides.length - 1; i++ ) {
-//       var staticSlide = this.staticSlides[i];
-//       if ( -this.x < staticSlide.target ) {
-//         break;
-//       }
-//       dragIndex = i;
-//     }
-//     return {
-//       a: dragIndex,
-//       b: dragIndex + 1,
-//     };
-//   };
-
-//   proto.wrapDifference = function( a, b ) {
-//     var diff = b - a;
-
-//     if ( !this.options.wrapAround ) {
-//       return diff;
-//     }
-
-//     var diffPlus = diff + this.slideableWidth;
-//     var diffMinus = diff - this.slideableWidth;
-//     if ( Math.abs( diffPlus ) < Math.abs( diff ) ) {
-//       diff = diffPlus;
-//     }
-//     if ( Math.abs( diffMinus ) < Math.abs( diff ) ) {
-//       diff = diffMinus;
-//     }
-//     return diff;
-//   };
-
-//   // ---- wrapAround ---- //
-
-//   var _getWrapShiftCards = proto._getWrapShiftCards;
-//   proto._getWrapShiftCards = function() {
-//     if ( !this.options.fade ) {
-//       _getWrapShiftCards.apply( this, arguments );
-//     }
-//   };
-
-//   var shiftWrapCards = proto.shiftWrapCards;
-//   proto.shiftWrapCards = function() {
-//     if ( !this.options.fade ) {
-//       shiftWrapCards.apply( this, arguments );
-//     }
-//   };
-
-//   return FCarousel;
-// }));
-
-
-
-
-
-
-
 
 // steady (static) slide
 ( function( window, factory ) {
   // browser global
   window.FCarousel = window.FCarousel || {};
-  window.FCarousel.StaticSlide = factory();
+  window.FCarousel.StaticSlide = factory(window.getPosition);
 
-}( window, function factory() {
+}( window, function factory(getPosition) {
 'use strict';
 
   function StaticSlide( parent ) {
@@ -3276,64 +2897,61 @@
     this.height = 0;
   }
 
-  var proto = StaticSlide.prototype;
+  // var proto = StaticSlide.prototype;
 
-  proto.addCard = function( card ) {
+  StaticSlide.prototype.addCard = function( card ) {
     this.cards.push( card );
-    this.outerWidth += card.size.outerWidth;
-    this.height = Math.max( card.size.outerHeight, this.height );
+
+    this.outerWidth += card.width;
+    this.height = Math.max( card.height, this.height );
+
     // first card stuff
     if ( this.cards.length == 1 ) {
       this.x = card.x; // x comes from first card
-      var beginMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
-      this.firstMargin = card.size[ beginMargin ];
+      var startMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
+      this.startMargin = card[startMargin];
+      this.target = this.cards[0].target;
     }
+    
+    // this.updateSize();
   };
-
-  // proto.updateTarget = function() {
-  //   var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
-  //   var lastCard = this.getLastCard();
-  //   var lastMargin = lastCard ? lastCard.size[ endMargin ] : 0;
-  //   var staticSlideWidth = this.outerWidth - ( this.firstMargin + lastMargin );
-  //   this.target = this.x + this.firstMargin + staticSlideWidth * this.parent.cardAlign;
+  
+  // StaticSlide.prototype.updateSize = function() {
+  //   if (this.cards.length) {
+  //     var isRtl = !this.isOriginLeft,
+  //         lastCard = this.getLastCard();
+  //     // this.outerWidth = getPosition(this.cards[lastCard].element, isRtl).end - this.target;
+  //     this.outerWidth = getPosition(this.cards[lastCard].element, isRtl).end - getPosition(this.cards[0].element, isRtl).start;
+  //   }
   // };
     
-  proto.updateTarget = function() {
-    var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
-    var lastCard = this.getLastCard();
-    var lastMargin = lastCard ? lastCard.size[ endMargin ] : 0;
-    var staticSlideWidth = this.outerWidth - ( this.firstMargin + lastMargin );
-    this.target = this.x + this.firstMargin + staticSlideWidth * this.parent.cardAlign;
-    
-    if ( !this.parent.options.fade ) {
-      return;
-    }
-    // position cards at selected target
-    var staticSlideTargetX = this.target - this.x;
-    var firstCardX = this.cards[0].x;
-    this.cards.forEach( function( card ) {
-      var targetX = card.x - firstCardX - staticSlideTargetX;
-      card.renderPosition( targetX );
-    });
+  StaticSlide.prototype.updateTarget = function() {
+    // // var lastCard = this.getLastCard();
+    // // var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
+    // // var lastEndMargin = lastCard ? lastCard[endMargin] : 0;
+    // // var staticSlideWidth = this.outerWidth - ( this.startMargin + lastEndMargin );
+    // // this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
+
+    // this.target = this.cards[0].target;
   };
 
-  proto.getLastCard = function() {
+  StaticSlide.prototype.getLastCard = function() {
     return this.cards[ this.cards.length - 1 ];
   };
 
-  proto.select = function() {
+  StaticSlide.prototype.select = function() {
     this.cards.forEach( function( card ) {
       card.select();
     });
   };
 
-  proto.unselect = function() {
+  StaticSlide.prototype.unselect = function() {
     this.cards.forEach( function( card ) {
       card.unselect();
     });
   };
 
-  proto.getCardElements = function() {
+  StaticSlide.prototype.getCardElements = function() {
     return this.cards.map( function( card ) {
       return card.element;
     });
@@ -3342,26 +2960,121 @@
   
 
   // ----- create ----- //
-  FCarousel.createMethods.push('_createStaticSlide');
+  FCarousel.createMethods.push('_createStaticSlides');
 
   // -------------------------- FCarousel prototype -------------------------- //
   var proto = FCarousel.prototype;
 
-  proto._createStaticSlide = function () {
+  proto._createStaticSlides = function () {
     if ( !this.options.fade ) {
       return;
     }
-    this.staticSlides = new StaticSlide(this);
-    this.staticSlides = new StaticSlide(this);
-    this.staticSlides = new StaticSlide(this);
-    this.staticSlides = new StaticSlide(this);
+    // this.identifyStaticSlides();
     
-    // this.parent.on("activate", this.onActivateStaticSlide.bind(this));
     this.on("activate", this.activateStaticSlide);
     this.on("resize", this.updateStaticSlide);
   };
 
+  // proto.addStaticSlides = function() {
+  //   // this.staticSlides = new StaticSlide(this);
+  // };
+  
+  // proto.identifyStaticSlides = function () {
+  //   var slides = [],
+  //       _this = this;
 
+  //   this.cards.forEach(function (card) {
+  //     if (true) {
+  //       //
+  //     }
+  //   });
+
+  //   this.staticSlides = utils.makeArray(cardElems).map(function (elem) {
+  //     return new Card(elem, _this);
+  //   });
+  // };
+
+  proto.activateStaticSlide = function() {
+    this.updateStaticSlides();
+    this.emitEvent("activateStaticSlides");
+  };
+
+  proto.updateStaticSlides = function() {
+    this.staticSlides = [];
+    if ( !this.cards.length ) {
+      return;
+    }
+
+    var staticSlide = new StaticSlide( this );
+    this.staticSlides.push( staticSlide );
+
+    var isOriginLeft = this.originSide == 'left';
+    var endMargin = isOriginLeft ? 'marginRight' : 'marginLeft';
+
+    var canCardFit = this._getCanCardFit();
+
+    this.cards.forEach( function( card, i ) {
+      // just add card if first card in staticSlide
+      if ( !staticSlide.cards.length ) {
+        staticSlide.addCard( card );
+        return;
+      }
+
+      var staticSlideNextWidth = ( staticSlide.outerWidth - staticSlide.startMargin ) + ( card.width - card[endMargin] );
+
+      if ( canCardFit.call( this, i, staticSlideNextWidth ) ) {
+        staticSlide.addCard( card );
+      } else {
+        // doesn't fit, new staticSlide
+        staticSlide.updateTarget();
+
+        staticSlide = new StaticSlide( this );
+        this.staticSlides.push( staticSlide );
+        staticSlide.addCard( card );
+      }
+    }, this );
+    // last staticSlide
+    staticSlide.updateTarget();
+    // update .selectedStaticSlide
+    this.updateSelectedStaticSlide();
+  };
+
+  proto.updateSelectedStaticSlide = function() {
+    // var staticSlide = this.staticSlides[ this.selectedIndex ];
+    var staticSlide = this.staticSlides[ this.selectedStaticSlideIndex ];
+    // selectedStaticSlideIndex could be outside of staticSlides, if triggered before resize()
+    if ( !staticSlide ) {
+      return;
+    }
+    // unselect previous selected staticSlide
+    this.unselectSelectedStaticSlide();
+    // update new selected staticSlide
+    this.selectedStaticSlide = staticSlide;
+    staticSlide.select();
+    this.selectedCards = staticSlide.cards;
+    // this.selectedElements = staticSlide.getCellElements();
+  };
+
+  proto.unselectSelectedStaticSlide = function() {
+    if ( this.selectedSlide ) {
+      this.selectedSlide.unselect();
+    }
+  };
+    
+  proto._getCanCardFit = function() {
+    // var groupCards = this.options.groupCards;
+    var groupCards = this.options.fade;
+    if ( !groupCards ) {
+      return function() {
+        return false;
+      };
+    }
+    // default, group by width of staticSlide
+    return function( i, staticSlideNextWidth ) {
+      // return staticSlideNextWidth <= ( this.size.innerWidth + 1 ) * percent;
+      return staticSlideNextWidth <= this.viewportWidth;
+    };
+  };
 
   return StaticSlide;
 }));
@@ -3385,6 +3098,29 @@
   // ---- StaticSlide ---- //
   var StaticSlide = FCarousel.StaticSlide;
 
+  // وقتی بخواهیم یک متد را override (overwrite ?)
+  // کنیم و در جایی ازمتد جدید، متدی که قبلا موجود بوده را هم اجرا کنیم
+  // باید قبل از بازنویسی متد، تعریف متد قدیمی آن را در یک متغییر ذخیره کنیم
+  // تا در متد بازنویسی شده از همان استفاده کنیم
+  // 
+  // در این جا علاوه بر این عمل از apply
+  // هم استفاده شده تا آرگومان ها و this
+  // همین جا را به متد قدیمی هم اعمال کند
+  // 
+  var staticSlideUpdateTarget = StaticSlide.prototype.updateTarget;
+  StaticSlide.prototype.updateTarget = function() {
+    staticSlideUpdateTarget.apply( this, arguments );
+    if ( !this.parent.options.fade ) {
+      return;
+    }
+    // position cards at selected target
+    var staticSlideTargetX = this.target - this.x;
+    var firstCardX = this.cards[0].x;
+    this.cards.forEach( function( card ) {
+      var targetX = card.x - firstCardX - staticSlideTargetX;
+      card.renderPosition( targetX );
+    });
+  };
 
   StaticSlide.prototype.setOpacity = function( alpha ) {
     this.cards.forEach( function( card ) {
@@ -3398,94 +3134,42 @@
   FCarousel.createMethods.push('_createFade');
 
   proto._createFade = function() {
-    this.fadeIndex = this.selectedIndex;
-    this.prevSelectedIndex = this.selectedIndex;
+    if ( !this.options.fade ) {
+      return;
+    }
+
+    this.on("activateStaticSlides", this.activateFade);
+  };
+  
+  proto.activateFade = function() {
+    this.fadeIndex = this.selectedStaticSlideIndex;
+    this.prevSelectedStaticSlideIndex = this.selectedStaticSlideIndex;
     this.on( 'select', this.onSelectFade );
     this.on( 'dragEnd', this.onDragEndFade );
     this.on( 'settle', this.onSettleFade );
     this.on( 'activate', this.onActivateFade );
     this.on( 'deactivate', this.onDeactivateFade );
   };
-
+  
+  var updateStaticSlides = proto.updateStaticSlides;
   proto.updateStaticSlides = function() {
-    this.staticSlides = [];
-    if ( !this.cards.length ) {
-      return;
-    }
-  
-    var staticSlide = new StaticSlide( this );
-    this.staticSlides.push( staticSlide );
-    var isOriginLeft = this.originSide == 'left';
-    var nextMargin = isOriginLeft ? 'marginRight' : 'marginLeft';
-  
-    var canCardFit = this._getCanCardFit();
-  
-    this.cards.forEach( function( card, i ) {
-      // just add card if first card in staticSlide
-      if ( !staticSlide.cards.length ) {
-        staticSlide.addCard( card );
-        return;
-      }
-  
-      var staticSlideWidth = ( staticSlide.outerWidth - staticSlide.firstMargin ) +
-        ( card.size.outerWidth - card.size[ nextMargin ] );
-  
-      if ( canCardFit.call( this, i, staticSlideWidth ) ) {
-        staticSlide.addCard( card );
-      } else {
-        // doesn't fit, new staticSlide
-        staticSlide.updateTarget();
-  
-        staticSlide = new StaticSlide( this );
-        this.staticSlides.push( staticSlide );
-        staticSlide.addCard( card );
-      }
-    }, this );
-    // last staticSlide
-    staticSlide.updateTarget();
-    // update .selectedSlide
-    this.updateSelectedSlide();
-    
-    
+    updateStaticSlides.apply( this, arguments );
     if ( !this.options.fade ) {
       return;
     }
     // set initial opacity
     this.staticSlides.forEach( function( staticSlide, i ) {
-      var alpha = i == this.selectedIndex ? 1 : 0;
+      var alpha = i == this.selectedStaticSlideIndex ? 1 : 0;
       staticSlide.setOpacity( alpha );
     }, this );
   };
-  
-proto._getCanCardFit = function() {
-  var groupCards = this.options.groupCards;
-  if ( !groupCards ) {
-    return function() {
-      return false;
-    };
-  } else if ( typeof groupCards == 'number' ) {
-    // group by number. 3 -> [0,1,2], [3,4,5], ...
-    var number = parseInt( groupCards, 10 );
-    return function( i ) {
-      return ( i % number ) !== 0;
-    };
-  }
-  // default, group by width of staticSlide
-  // parse '75%
-  var percentMatch = typeof groupCards == 'string' &&
-    groupCards.match(/^(\d+)%$/);
-  var percent = percentMatch ? parseInt( percentMatch[1], 10 ) / 100 : 1;
-  return function( i, staticSlideWidth ) {
-    return staticSlideWidth <= ( this.size.innerWidth + 1 ) * percent;
-  };
-};
 
   /* ---- events ---- */
 
   proto.onSelectFade = function() {
     // in case of resize, keep fadeIndex within current count
-    this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
-    this.prevSelectedIndex = this.selectedIndex;
+    this.fadeIndex = Math.min( this.prevSelectedStaticSlideIndex, this.staticSlides.length - 1 );
+    this.prevSelectedStaticSlideIndex = this.selectedStaticSlideIndex;
   };
 
   proto.onSettleFade = function() {
@@ -3496,7 +3180,7 @@ proto._getCanCardFit = function() {
     // set full and 0 opacity on selected & faded staticSlides
     this.selectedStaticSlide.setOpacity( 1 );
     var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
-    if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
+    if ( fadedStaticSlide && this.fadeIndex != this.selectedStaticSlideIndex ) {
       this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
     }
   };
@@ -3549,6 +3233,7 @@ proto._getCanCardFit = function() {
     if ( this.staticSlides.length < 2 ) {
       return;
     }
+    debugger;
     // get staticSlides to fade-in & fade-out
     var indexes = this.getFadeIndexes();
     var fadeStaticSlideA = this.staticSlides[ indexes.a ];
@@ -3580,7 +3265,7 @@ proto._getCanCardFit = function() {
     if ( !this.isDragging && !this.didDragEnd ) {
       return {
         a: this.fadeIndex,
-        b: this.selectedIndex,
+        b: this.selectedStaticSlideIndex,
       };
     }
     if ( this.options.wrapAround ) {
