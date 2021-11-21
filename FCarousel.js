@@ -815,7 +815,8 @@
       instances[ id ] = this; // associate via id
 
       // this.selectedIndex = this.constructor.defaults.initialIndex || 0;
-      this.selectedIndex = this.options.initialIndex || 0;
+      // this.selectedIndex = this.options.initialIndex || 0;
+      this.selectedIndex = +this.options.initialIndex || 0;
       // how many frames slider has been in same position
       this.restingFrames = 0;
       // initial physics properties
@@ -1001,9 +1002,14 @@
     };
 
     proto.getIndexInRange = function (index) {
-      index = parseInt(+index) ? parseInt(+index) : 0;
-      index = index > this.lastIndex ? this.lastIndex : index;
-      index = index < 0 ? 0 : index;
+      // index = parseInt(+index) ? parseInt(+index) : 0;
+      // index = index > this.lastIndex ? this.lastIndex : index;
+      // index = index < 0 ? 0 : index;
+      // return index;
+      
+      index = parseInt(+index) || 0;
+      index = Math.min(this.lastIndex, index);
+      index = Math.max(0, index);
       return index;
     };
 
@@ -2764,8 +2770,6 @@
     // });
     // this.changeNavSelectedClass('add');
 
-    // debugger;
-    
     var companion = this.navCompanion;
     // stop if companion has more cards than this one
     if ( companion.selectedIndex >= this.cards.length ) {
@@ -3041,8 +3045,8 @@
 
   proto.updateSelectedStaticSlide = function() {
     // var staticSlide = this.staticSlides[ this.selectedIndex ];
-    var staticSlide = this.staticSlides[ this.selectedStaticSlideIndex ];
-    // selectedStaticSlideIndex could be outside of staticSlides, if triggered before resize()
+    var staticSlide = this.staticSlides[ this.selectedIndex ];
+    // selectedIndex could be outside of staticSlides, if triggered before resize()
     if ( !staticSlide ) {
       return;
     }
@@ -3053,6 +3057,16 @@
     staticSlide.select();
     this.selectedCards = staticSlide.cards;
     // this.selectedElements = staticSlide.getCellElements();
+    
+    // selectedCard
+    // را به منظور استفاده در متد هایی که از 
+    // selectedStaticSlide
+    // استفاده نکرده اند، نیاز داریم، در واقع این کار باعث می شود در بعضی متد ها که به 
+    // تارگت المان سلکت شده نیاز است می توان جایگزین بازنویسی یا تغییر آن متد شود
+
+    // HACK: selectedCard & selectedElement is first card in slide, backwards compatibility
+    this.selectedCard = staticSlide.cards[0];
+    // this.selectedElement = this.selectedElements[0];
   };
 
   proto.unselectSelectedStaticSlide = function() {
@@ -3074,6 +3088,99 @@
       // return staticSlideNextWidth <= ( this.size.innerWidth + 1 ) * percent;
       return staticSlideNextWidth <= this.viewportWidth;
     };
+  };
+
+  var getIndexInRange = proto.getIndexInRange;
+  proto.getIndexInRange = function (index) {
+    if ( !this.options.fade ) {
+      return getIndexInRange.apply( this, arguments );
+
+      // نکته مهم: اگر یک ریترن خالی در اینجا باشد (به جای اینکه قبل از متد بالا باشد) و
+      //  متدی که رویش اپلای زدیم هم مقداری را ریترن کرده باشد آن مقدار اینجا از دست
+      //  می رود... پس گذاشتن ریترن خالی در اینجا درست نیست
+      // مگر اینکه مطمئن باشیم که آن متد قرار نیست مقداری را ریترن کند
+      // // // // return;
+    }
+    index = parseInt(+index) || 0;
+    index = Math.min(this.staticSlides.length - 1, index);
+    index = Math.max(0, index);
+    return index;
+  };
+
+  var select = proto.select;
+  proto.select = function (slideIndex, isWrap, isInstant) {
+    if ( !this.options.fade ) {
+      select.apply( this, arguments );
+      return;
+    }
+    
+    if (this.options.wrapAround || isWrap) {
+      slideIndex = utils.modulo(slideIndex, this.staticSlides.length);
+    } else {
+      slideIndex = this.getIndexInRange(slideIndex);
+    }
+    
+    // bail if invalid index
+    if (!this.staticSlides[slideIndex]) {
+      return;
+    }
+
+    var prevIndex = this.selectedIndex;
+    this.selectedIndex = slideIndex;
+    this.updateSelectedStaticSlide();
+    if (isInstant) {
+      this.positionSliderAtSelected();
+    } else {
+      this.startAnimation();
+    }
+    
+    // if ( this.options.adaptiveHeight ) {
+    //   this.setGallerySize();
+    // }
+    // events
+    this.dispatchEvent( 'select', null, [slideIndex] );
+    // change event if new index
+    if ( slideIndex != prevIndex ) {
+      this.dispatchEvent( 'change', null, [slideIndex] );
+    }
+  };
+  
+  var prev = proto.prev;
+  proto.prev = function () {
+    if ( !this.options.fade ) {
+      prev.apply( this, arguments );
+      return;
+    }
+    var index = -1 + this.selectedIndex;
+    this.select(index);
+  };
+
+  var next = proto.next;
+  proto.next = function () {
+    if ( !this.options.fade ) {
+      next.apply( this, arguments );
+      return;
+    }
+    var index = 1 + this.selectedIndex;
+    this.select(index);
+  };
+  
+  var selectInitialIndex = proto.selectInitialIndex;
+  proto.selectInitialIndex = function() {
+    if ( !this.options.fade ) {
+      selectInitialIndex.apply( this, arguments );
+      return;
+    }
+    var initialIndex = this.options.initialIndex;
+    // already activated, select previous selectedIndex
+    if ( this.isInitActivated ) {
+      this.select( this.selectedIndex, false, true );
+      return;
+    }
+    // select with number
+    initialIndex = this.getIndexInRange(this.options.initialIndex);
+    // select instantly
+    this.select( initialIndex, false, true );
   };
 
   return StaticSlide;
@@ -3142,8 +3249,8 @@
   };
   
   proto.activateFade = function() {
-    this.fadeIndex = this.selectedStaticSlideIndex;
-    this.prevSelectedStaticSlideIndex = this.selectedStaticSlideIndex;
+    this.fadeIndex = this.selectedIndex;
+    this.prevSelectedIndex = this.selectedIndex;
     this.on( 'select', this.onSelectFade );
     this.on( 'dragEnd', this.onDragEndFade );
     this.on( 'settle', this.onSettleFade );
@@ -3159,7 +3266,7 @@
     }
     // set initial opacity
     this.staticSlides.forEach( function( staticSlide, i ) {
-      var alpha = i == this.selectedStaticSlideIndex ? 1 : 0;
+      var alpha = i == this.selectedIndex ? 1 : 0;
       staticSlide.setOpacity( alpha );
     }, this );
   };
@@ -3168,8 +3275,8 @@
 
   proto.onSelectFade = function() {
     // in case of resize, keep fadeIndex within current count
-    this.fadeIndex = Math.min( this.prevSelectedStaticSlideIndex, this.staticSlides.length - 1 );
-    this.prevSelectedStaticSlideIndex = this.selectedStaticSlideIndex;
+    this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
+    this.prevSelectedIndex = this.selectedIndex;
   };
 
   proto.onSettleFade = function() {
@@ -3180,7 +3287,7 @@
     // set full and 0 opacity on selected & faded staticSlides
     this.selectedStaticSlide.setOpacity( 1 );
     var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
-    if ( fadedStaticSlide && this.fadeIndex != this.selectedStaticSlideIndex ) {
+    if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
       this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
     }
   };
@@ -3217,7 +3324,7 @@
     }
 
     this.fadeStaticSlides();
-    this.dispatchScrollEvent();
+    // this.dispatchScrollEvent();
   };
 
   var positionSliderAtSelected = proto.positionSliderAtSelected;
@@ -3233,7 +3340,7 @@
     if ( this.staticSlides.length < 2 ) {
       return;
     }
-    debugger;
+    // debugger;
     // get staticSlides to fade-in & fade-out
     var indexes = this.getFadeIndexes();
     var fadeStaticSlideA = this.staticSlides[ indexes.a ];
@@ -3265,7 +3372,7 @@
     if ( !this.isDragging && !this.didDragEnd ) {
       return {
         a: this.fadeIndex,
-        b: this.selectedStaticSlideIndex,
+        b: this.selectedIndex,
       };
     }
     if ( this.options.wrapAround ) {
