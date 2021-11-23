@@ -688,10 +688,20 @@
   $.extend(proto, getElemSize.prototype);
 
   proto.create = function () {
+    // this.element.style.position = 'absolute';
     // this.element.setAttribute( 'aria-hidden', 'true' );
-    this.updateTarget();
-    this.getSizes();
+    this.x = 0;
+    this.shift = 0;
+    
+    // this.updateTarget();
+    // this.getUsefulSizes();
   };
+
+  // proto.setPosition = function( x ) {
+  //   this.x = x;
+  //   this.updateTarget();
+  //   this.renderPosition(x);
+  // };
 
   proto.updateTarget = function () {
     this.target = this.originalTarget = this.getDistanceFromStart();
@@ -715,21 +725,33 @@
     // this.element.setAttribute( 'aria-hidden', 'true' );
   };
   proto.renderPosition = function(x) {
+    this.element.style.position = 'absolute';
     // render position of card with in slider
     var side = this.parent.originSide;
     // this.element.style[ side ] = this.parent.getPositionValue( x );
     this.element.style[side] = Math.round(x) + 'px';
   };
-  proto.getSizes = function () {
-    this.getWidth();
-    this.getHeight();
+  proto.getUsefulSizes = function () {
+    // this.getWidth();
+    // this.getHeight();
+    // this.getMargins();
+    var size = this.getSize(this.element);
+    this.width = size.outerWidth;
+    this.height = size.outerHeight;
+    this.marginLeft = size.marginLeft;
+    this.marginRight = size.marginRight;
   };
-  proto.getWidth = function () {
-    this.width = this.getOuterWidth(this.element)
-  };
-  proto.getHeight = function () {
-    this.height = this.getOuterHeight(this.element)
-  };
+  // proto.getWidth = function () {
+  //   this.width = this.getOuterWidth(this.element)
+  // };
+  // proto.getHeight = function () {
+  //   this.height = this.getOuterHeight(this.element)
+  // };
+  // proto.getMargins = function () {
+  //   var size = this.getSize();
+  //   this.marginLeft = size.marginLeft;
+  //   this.marginRight = size.marginRight;
+  // };
 
   return Card;
 });
@@ -850,6 +872,8 @@
       this.updateViewportWidth();
       this.updateViewportSize();
       this.updateSliderWidth();
+      this.positionCards();
+      this.setGallerySize();
       this.updateCardsFeatures();
       this.setCardAlign();
 
@@ -898,6 +922,14 @@
     proto.setCardAlign = function() {
       var shorthand = cardAlignShorthands[this.options.cardAlign];
       this.cardAlign = shorthand[this.originSide];
+    };
+    proto.setGallerySize = function() {
+      // if ( this.options.setGallerySize ) {
+      if ( this.options.setGallerySize || this.options.fade ) {
+        var height = this.options.adaptiveHeight && this.selectedStaticSlide ?
+          this.selectedStaticSlide.height : this.maxCardHeight;
+        this.viewport.style.height = height + 'px';
+      }
     };
     proto.identifyCards = function () {
       var selector = this.constructor.selectors.cards,
@@ -1190,7 +1222,8 @@
       this.updateViewportWidth();
       this.updateViewportSize();
       this.updateSliderWidth();
-      this.updateCardsSize();
+      this.positionCards();
+      this.setGallerySize();
       this.updateCardsFeatures();
       // this.setCardAlign();
 
@@ -1199,12 +1232,59 @@
       this.select(this.selectedIndex, false, true);
     };
     
-    proto.updateCardsSize = function() {
-      for (var i=0; i < this.cards.length; i++) {
-        var card = this.cards[i];
-        card.getSizes();
-        card.updateTarget();
+    proto.updateCardsSize = function(cards) {
+      // for (var i=0; i < this.cards.length; i++) {
+      //   var card = this.cards[i];
+      //   card.getUsefulSizes();
+      // }
+      cards.forEach( function( card ) {
+        card.getUsefulSizes();
+      });
+    };
+
+    // positions all cards
+    proto.positionCards = function() {
+      // size all cards
+      this.updateCardsSize( this.cards );
+      // position all cards
+      this._positionCards( 0 );
+    };
+    
+    proto._positionCards = function( index ) {
+      index = index || 0;
+      // also measure maxCardHeight
+      // start 0 if positioning all cards
+      this.maxCardHeight = index ? this.maxCardHeight || 0 : 0;
+      var cardX = 0;
+      // get cardX
+      if ( index > 0 ) {
+        var startCard = this.cards[ index - 1 ];
+        cardX = startCard.x + startCard.width;
       }
+      var len = this.cards.length;
+      for ( var i=index; i < len; i++ ) {
+        var card = this.cards[i];
+
+        // card.setPosition(cardX);
+        card.x = cardX;
+        card.updateTarget();
+
+        cardX += card.width;
+        this.maxCardHeight = Math.max( card.height, this.maxCardHeight );
+      }
+
+      // // keep track of cardX for wrap-around
+      // this.slideableWidth = cardX;
+
+      // // slides
+      // this.updateStaticSlides();
+      
+      // contain slides target
+      this._containSlides();
+      // this._containStaticSlides();
+
+      // // update slidesWidth
+      // this.slidesWidth = len ? this.getLastSlide().target - this.slides[0].target : 0;
     };
 
     // ----- focus ----- //
@@ -3056,7 +3136,7 @@
     this.selectedStaticSlide = staticSlide;
     staticSlide.select();
     this.selectedCards = staticSlide.cards;
-    // this.selectedElements = staticSlide.getCellElements();
+    // this.selectedElements = staticSlide.getCardElements();
     
     // selectedCard
     // را به منظور استفاده در متد هایی که از 
@@ -3070,8 +3150,8 @@
   };
 
   proto.unselectSelectedStaticSlide = function() {
-    if ( this.selectedSlide ) {
-      this.selectedSlide.unselect();
+    if ( this.selectedStaticSlide ) {
+      this.selectedStaticSlide.unselect();
     }
   };
     
@@ -3221,7 +3301,13 @@
       return;
     }
     // position cards at selected target
-    var staticSlideTargetX = this.target - this.x;
+
+    // var staticSlideTargetX = this.target - this.x;
+    // fardin TODO
+    // این عبارت موقتا (بدلیل وجود فاصله بین کارتها که ناشی از پدینگ و مارجین نیست)
+    // جایگزین شده و باید با عبارت درستی جایگزین شود
+    var staticSlideTargetX = 0;
+
     var firstCardX = this.cards[0].x;
     this.cards.forEach( function( card ) {
       var targetX = card.x - firstCardX - staticSlideTargetX;
@@ -3260,6 +3346,7 @@
   
   var updateStaticSlides = proto.updateStaticSlides;
   proto.updateStaticSlides = function() {
+    // debugger;
     updateStaticSlides.apply( this, arguments );
     if ( !this.options.fade ) {
       return;
