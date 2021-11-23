@@ -426,7 +426,7 @@ button {
     /* margin: 8px 22px 2px; */
     /* padding: 5px 0 4px; */
     margin: 0 20px;
-    padding: 13px 6px 10px;
+    /* padding: 13px 6px 10px; */
     padding: 13px 0 10px;
     white-space: nowrap;
 }
@@ -444,7 +444,7 @@ button {
     direction: rtl;
     font-weight: 500;
     vertical-align: text-top;
-    height: inherit;
+    /* height: inherit; */
     /* margin: 0 2px; */
 }
 
