@@ -315,7 +315,11 @@ button {
     -webkit-transition: all 0.3s;
     transition: all 0.3s;
     text-align: center;
-    opacity: 0.5;
+    opacity: 0.65;
+}
+.f-carousel .f-carousel-control.disabled,
+.f-carousel .f-carousel-control:disabled {
+    opacity: 0.25 !important;
 }
 @media (prefers-reduced-motion: reduce) {
     .slider-cards-list .f-carousel-control,

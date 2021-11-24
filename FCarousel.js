@@ -463,11 +463,11 @@
   // proto.dispatchScrollEvent = function() {
   //   var _this = this.isScrollbar ? this.parent : this;
   //   var firstCard = _this.cards[0];
-  //   if ( !firstCard || _this.cards[_this.lastIndex].target == 0 ) {
+  //   if ( !firstCard || _this.cards[_this.lastIndex].originalTarget == 0 ) {
   //     return;
   //   }
-  //   var positionX = -_this.x - firstCard.target;
-  //   var progress = positionX / _this.cards[_this.lastIndex].target - firstCard.target;
+  //   var positionX = -_this.x - firstCard.originalTarget;
+  //   var progress = positionX / _this.cards[_this.lastIndex].originalTarget - firstCard.originalTarget;
   //   this.dispatchEvent( 'scroll', null, [ progress, positionX ] );
   // };
 
@@ -513,7 +513,6 @@
 
       // render position with translateX when settled
       this.positionSlider();
-      // this.dispatchEvent( 'settle', null, [ this.selectedIndex ] );
       
       if (this.positioningCompanion) {
         this.positioningCompanion.isAnimating = false;
@@ -522,6 +521,8 @@
         delete this.positioningCompanion.lastVelocity;
         this.positioningCompanion.positionSlider();
       }
+
+      this.dispatchEvent( 'settle', null, [ this.selectedIndex ] );
     }
   };
   return proto;
@@ -582,7 +583,7 @@
     if (dragDown || this.isFreeScrolling || !this.cards.length) {
       return;
     }
-    var distance = this.selectedCard.target * -1 - this.x;
+    var distance = this.selectedCard.originalTarget * -1 - this.x;
     var force = distance * this.options.selectedAttraction;
     this.applyForce(force);
   };
@@ -603,19 +604,19 @@
     if (!companion) {
       return;
     }
-    var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].target,
-        IsLessThanOriginBound = -this.x < this.cards[0].target,
+    var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].originalTarget,
+        IsLessThanOriginBound = -this.x < this.cards[0].originalTarget,
         acquiredWidth;
     if ( IsGreaterThanEndBound || IsLessThanOriginBound ) {
       // cISCSWidth: calculated Instantaneous size of carousel sliding width
-      var cISCSWidth = this.cards[this.lastIndex].target - this.cards[0].target,
+      var cISCSWidth = this.cards[this.lastIndex].originalTarget - this.cards[0].originalTarget,
           cVWidth = this.viewportWidth;         // carousel viewport width
 
       if ( IsGreaterThanEndBound ) {
-        cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].target);
+        cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].originalTarget);
       }
       else if ( IsLessThanOriginBound ) {
-        cISCSWidth += Math.abs(-this.x - this.cards[0].target);
+        cISCSWidth += Math.abs(-this.x - this.cards[0].originalTarget);
       }
       
       acquiredWidth = companion.trackWidth * cVWidth / cISCSWidth;
@@ -650,7 +651,7 @@
     if ( !this.cards.length ) {
       return;
     }
-    this.x = -this.selectedCard.target;
+    this.x = -this.selectedCard.originalTarget;
     this.velocity = 0; // stop wobble
     delete this.lastVelocity;
     this.positionSlider();
@@ -697,24 +698,33 @@
     // this.getUsefulSizes();
   };
 
-  // proto.setPosition = function( x ) {
-  //   this.x = x;
-  //   this.updateTarget();
-  //   this.renderPosition(x);
-  // };
+  proto.setPosition = function(x) {
+    // this.x = x;
+    this.originalTarget = x;
+    this.updateTarget();
+    this.renderPosition(x);
+  };
 
   proto.updateTarget = function () {
-    this.target = this.originalTarget = this.getDistanceFromStart();
+    // this.originalTarget = this.getDistanceFromStart();
+    this.target = this.getDistanceFromStart();
   };
   proto.getDistanceFromStart = function () {
     var parent = this.parent,
         isRightToLeft = parent.options.rightToLeft,
         // viewportStartPosition = getPosition(parent.viewport, isRightToLeft).start,
         sliderStartPosition = getPosition(parent.slider, isRightToLeft).start,
-        cardStartPosition = getPosition(this.element, isRightToLeft).start;
+        cardStartPosition = getPosition(this.element, isRightToLeft).start,
+        // startMargin = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
+        startMargin = isRightToLeft ? 'marginRight' : 'marginLeft';
+
+    // نکته : با روشی که اینجا اجرا می کنیم مارجین استارت هر دو المان کلیدی (کارت و اسلایدر) را
+    // در نظر نگرفتیم؛ پس در صورتی که در آینده متوجه شویم که  باید مارجین استارت هر کارتی را
+    // هم در نظر بگیریم می توانیم آن مارجین را از خروجی این متد کم کنیم.اا
 
     // return viewportStart - cardStartPosition;
-    return sliderStartPosition - cardStartPosition;
+    // return sliderStartPosition - cardStartPosition;
+    return sliderStartPosition - cardStartPosition - this[startMargin];
   };
   proto.select = function() {
     this.element.classList.add('is-selected');
@@ -725,6 +735,9 @@
     // this.element.setAttribute( 'aria-hidden', 'true' );
   };
   proto.renderPosition = function(x) {
+    if (!this.parent.options.fade) {
+      return;
+    }
     this.element.style.position = 'absolute';
     // render position of card with in slider
     var side = this.parent.originSide;
@@ -981,7 +994,7 @@
 
       if (!isContentSmaller) {
         var lastSelectableCard = this.getLastSelectableCard();
-        lastSelectableCard.target = contentWidth - this.viewportWidth;
+        lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
       }
     };
 
@@ -1256,20 +1269,38 @@
       // start 0 if positioning all cards
       this.maxCardHeight = index ? this.maxCardHeight || 0 : 0;
       var cardX = 0;
-      // get cardX
-      if ( index > 0 ) {
-        var startCard = this.cards[ index - 1 ];
-        cardX = startCard.x + startCard.width;
-      }
+      
+      // // get cardX
+      // if ( index > 0 ) {
+      //   var startCard = this.cards[index - 1],
+      //       currentCard = this.cards[index],
+      //       cardX_exact = startCard.originalTarget + startCard.width,
+      //       cardX_pointToPoint = currentCard.target - startCard.target + startCard.originalTarget;
+      //   // cardX = startCard.x + startCard.width;
+      //   cardX = Math.max(cardX_exact, cardX_pointToPoint);
+      // }
+
       var len = this.cards.length;
       for ( var i=index; i < len; i++ ) {
-        var card = this.cards[i];
+        
+        var card = this.cards[i],
+            nextCard = this.cards[i + 1],
+            nextCardDistance;
 
-        // card.setPosition(cardX);
-        card.x = cardX;
-        card.updateTarget();
+        // get startCardX
+        if (index > 0 && i == index) {
+          var startCard = this.cards[index - 1],  // the 'startCard' here is actually the prior card
+              cardX_exact = startCard.originalTarget + startCard.width,
+              cardX_pointToPoint = startCard.originalTarget + card.target - startCard.target;
+          cardX = Math.max(cardX_exact, cardX_pointToPoint);
+        }
+        
+        card.setPosition(cardX);
 
-        cardX += card.width;
+        nextCardDistance = nextCard ? nextCard.getDistanceFromStart() - card.target : 0;
+        // cardX += card.width;
+        cardX += Math.max(card.width, nextCardDistance);
+
         this.maxCardHeight = Math.max( card.height, this.maxCardHeight );
       }
 
@@ -2107,9 +2138,9 @@
 
     if ( !this.options.wrapAround && this.cards.length ) {
       // slow drag
-      var originBound = Math.max( -this.cards[0].target, this.dragStartPosition );
+      var originBound = Math.max( -this.cards[0].originalTarget, this.dragStartPosition );
       dragX = dragX > originBound ? ( dragX + originBound ) * 0.5 : dragX;
-      var endBound = Math.min( -this.getLastSelectableCard().target, this.dragStartPosition );
+      var endBound = Math.min( -this.getLastSelectableCard().originalTarget, this.dragStartPosition );
       dragX = dragX < endBound ? ( dragX + endBound ) * 0.5 : dragX;
     }
 
@@ -2134,13 +2165,13 @@
       // do not free-scroll if going outside of bounding slides
       // so bounding slides can attract slider, and keep it in bounds
       var restingX = this.getRestingPosition();
-      this.isFreeScrolling = -restingX > this.cards[0].target && -restingX < this.getLastSelectableCard().target;
+      this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.getLastSelectableCard().originalTarget;
       // console.log("restingX", -restingX);
-      // console.log("firstIndex-target", this.cards[0].target);
-      // console.log("lastIndex-target", this.cards[this.lastIndex].target);
+      // console.log("firstIndex-target", this.cards[0].originalTarget);
+      // console.log("lastIndex-target", this.cards[this.lastIndex].originalTarget);
       // console.log("isFreeScrolling", this.isFreeScrolling);
       // console.log("");
-      // this.isFreeScrolling = -restingX > this.cards[0].target && -restingX < this.cards[this.lastIndex].target;
+      // this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.cards[this.lastIndex].originalTarget;
     }
     else if ( !this.options.freeScroll && index == this.selectedIndex ) {
       // boost selection if selected index has not changed
@@ -2153,7 +2184,7 @@
     this.isDragSelect = this.options.wrapAround;
     this.select( index );
     delete this.isDragSelect;
-    // this.dispatchEvent( 'dragEnd', event, [ pointer ] );
+    this.dispatchEvent( 'dragEnd', event, [ pointer ] );
   };
 
   proto.dragEndRestingSelect = function() {
@@ -2219,7 +2250,7 @@
     }
     // add distance for wrap-around slides
     var wrap = isWrapAround ? this.slideableWidth * Math.floor( index / len ) : 0;
-    return x - ( card.target + wrap );
+    return x - ( card.originalTarget + wrap );
   };
 
   proto.dragEndBoostSelect = function() {
@@ -2372,7 +2403,7 @@
     var parent = this.parent,
         cards = parent.cards,
         // cSWidth = parent.slideableWidth,                        // carousel slider width
-        cSWidth = cards[parent.lastIndex].target - cards[0].target,  // carousel sliding width
+        cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
         cVWidth = parent.viewportWidth;                            // carousel viewport width
     // return (this.trackWidth * (cSWidth - cVWidth) / cSWidth)
     return (this.trackWidth * cVWidth / cSWidth)
@@ -2389,7 +2420,7 @@
   };
   ScrollHandle.prototype.updatecompanionConversionFactor = function () {
     var cards = this.parent.cards,
-        cSWidth = cards[this.parent.lastIndex].target - cards[0].target,  //carousel sliding width
+        cSWidth = cards[this.parent.lastIndex].originalTarget - cards[0].originalTarget,  //carousel sliding width
         sSWidth = this.trackWidth - this.thumbWidth;    //scrollThumb sliding width
 
     // در صورتی که دامنه جا به جایی لغزنده کاروسل صفر باشد دامنه حرکت شستی اسکرول هم صفر خواهد بود
@@ -2994,7 +3025,7 @@
       this.x = card.x; // x comes from first card
       var startMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
       this.startMargin = card[startMargin];
-      this.target = this.cards[0].target;
+      this.target = this.cards[0].originalTarget;
     }
     
     // this.updateSize();
@@ -3016,7 +3047,7 @@
     // // var staticSlideWidth = this.outerWidth - ( this.startMargin + lastEndMargin );
     // // this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
 
-    // this.target = this.cards[0].target;
+    // this.target = this.cards[0].originalTarget;
   };
 
   StaticSlide.prototype.getLastCard = function() {
@@ -3056,7 +3087,7 @@
     // this.identifyStaticSlides();
     
     this.on("activate", this.activateStaticSlide);
-    this.on("resize", this.updateStaticSlide);
+    this.on("resize", this.updateStaticSlides);
   };
 
   // proto.addStaticSlides = function() {
@@ -3346,7 +3377,6 @@
   
   var updateStaticSlides = proto.updateStaticSlides;
   proto.updateStaticSlides = function() {
-    // debugger;
     updateStaticSlides.apply( this, arguments );
     if ( !this.options.fade ) {
       return;
