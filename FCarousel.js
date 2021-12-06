@@ -426,9 +426,6 @@
     // این روش اصولی نیست - ولی من راه حل دیگری برای این مشکل در این پروژه پیدا نکرده ام
     // ***
     if (!this.isPointerDown && this.velocity === 0 && this.isFreeScrolling && this.options.freeScrollFriction !== 1 && Math.abs(this.lastVelocity) >= 1) {
-      // console.log("1:dragMoveTime", !this.isScrollbar ? this.dragMoveTime : "");
-      // console.log("2:new Date", !this.isScrollbar ? new Date() : "");
-      // console.log("1-2", !this.isScrollbar ? new Date() - this.dragMoveTime : "");
       this.velocity = this.lastVelocity;
     }
   };
@@ -692,6 +689,7 @@
     // this.element.style.position = 'absolute';
     // this.element.setAttribute( 'aria-hidden', 'true' );
     this.x = 0;
+    this.originalTarget = 0;
     this.shift = 0;
     
     // this.updateTarget();
@@ -887,7 +885,6 @@
       this.updateSliderWidth();
       this.positionCards();
       this.setGallerySize();
-      this.updateCardsFeatures();
       this.setCardAlign();
 
       this.element.tabIndex = 0;
@@ -937,7 +934,6 @@
       this.cardAlign = shorthand[this.originSide];
     };
     proto.setGallerySize = function() {
-      // if ( this.options.setGallerySize ) {
       if ( this.options.setGallerySize || this.options.fade ) {
         var height = this.options.adaptiveHeight && this.selectedStaticSlide ?
           this.selectedStaticSlide.height : this.maxCardHeight;
@@ -959,9 +955,6 @@
       // updateCards
       // this.identifyCards();
     };
-    proto.updateCardsFeatures = function () {
-      this._containSlides();
-    };
     proto.updateViewportWidth = function () {
       this.viewportWidth = this.getInnerWidth(this.viewport);
     };
@@ -979,7 +972,7 @@
     // ----- contain ----- //
     // contain card targets so no excess sliding
     proto._containSlides = function() {
-      if ( !this.options.contain || this.options.wrapAround || !this.cards.length ) {
+      if ( !this.options.contain || this.options.wrapAround || !this.cards.length || this.options.fade ) {
         return;
       }
       var isRtl = this.options.rightToLeft;
@@ -1197,7 +1190,7 @@
         return card;
       }
       // try to get parent card elem
-      elem = $(elem).parent(this.constructor.selectors.cards)[0];
+      elem = $(elem).parents(this.constructor.selectors.cards)[0];
       return this.getCard(elem);
     };
 
@@ -1212,12 +1205,14 @@
     };
 
     // utils.debounceMethod( FCarousel, 'onresize', 150 );
-    utils.debounceMethod( FCarousel, 'onresize', 100 );
+    utils.debounceMethod( FCarousel, 'onresize', 0 );
 
     proto.resize = function() {
       if ( !this.isActive ) {
         return;
       }
+      // if (this.options.fade) debugger;
+      
       // this.getSize();
       // wrap values
       // if ( this.options.wrapAround ) {
@@ -1237,8 +1232,6 @@
       this.updateSliderWidth();
       this.positionCards();
       this.setGallerySize();
-      this.updateCardsFeatures();
-      // this.setCardAlign();
 
       this.emitEvent('resize');
       
@@ -1270,56 +1263,36 @@
       this.maxCardHeight = index ? this.maxCardHeight || 0 : 0;
       var cardX = 0;
       
-      // // get cardX
-      // if ( index > 0 ) {
-      //   var startCard = this.cards[index - 1],
-      //       currentCard = this.cards[index],
-      //       cardX_exact = startCard.originalTarget + startCard.width,
-      //       cardX_pointToPoint = currentCard.target - startCard.target + startCard.originalTarget;
-      //   // cardX = startCard.x + startCard.width;
-      //   cardX = Math.max(cardX_exact, cardX_pointToPoint);
-      // }
+      // get startCardX
+      if ( index > 0 ) {
+        // محاسبه تارگت کارت شروع (در صورتی که این کارت اولین کارت اسلایدر نباشد) بر
+        // مبنای تارگت کارت قبلی خود و مشخصات خودش (همین کارت)
+        var card = this.cards[index],
+            startCard = this.cards[index - 1],  // the 'startCard' here is actually the prior card
+            cardX_exact = startCard.originalTarget + startCard.width,
+            // cardX_pointToPoint = startCard.originalTarget + card.target - startCard.target;
+            cardX_pointToPoint = card.target || card.getDistanceFromStart();
+          cardX = this.options.fade ? cardX_exact : cardX_pointToPoint;
+      }
 
       var len = this.cards.length;
       for ( var i=index; i < len; i++ ) {
-        
         var card = this.cards[i],
             nextCard = this.cards[i + 1],
             nextCardDistance;
-
-        // get startCardX
-        if (index > 0 && i == index) {
-          var startCard = this.cards[index - 1],  // the 'startCard' here is actually the prior card
-              cardX_exact = startCard.originalTarget + startCard.width,
-              cardX_pointToPoint = startCard.originalTarget + card.target - startCard.target;
-          cardX = Math.max(cardX_exact, cardX_pointToPoint);
-        }
-        
         card.setPosition(cardX);
 
-        nextCardDistance = nextCard ? nextCard.getDistanceFromStart() - card.target : 0;
-        // cardX += card.width;
-        cardX += Math.max(card.width, nextCardDistance);
+        nextCardDistance = nextCard ? nextCard.getDistanceFromStart() - card.originalTarget : 0;
+        cardX += this.options.fade ? card.width : nextCardDistance;
 
         this.maxCardHeight = Math.max( card.height, this.maxCardHeight );
       }
 
-      // // keep track of cardX for wrap-around
-      // this.slideableWidth = cardX;
-
-      // // slides
-      // this.updateStaticSlides();
-      
       // contain slides target
       this._containSlides();
-      // this._containStaticSlides();
-
-      // // update slidesWidth
-      // this.slidesWidth = len ? this.getLastSlide().target - this.slides[0].target : 0;
     };
 
     // ----- focus ----- //
-
     proto.focus = function() {
       // TODO remove scrollTo once focus options gets more support
       // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#Browser_compatibility
@@ -2166,11 +2139,6 @@
       // so bounding slides can attract slider, and keep it in bounds
       var restingX = this.getRestingPosition();
       this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.getLastSelectableCard().originalTarget;
-      // console.log("restingX", -restingX);
-      // console.log("firstIndex-target", this.cards[0].originalTarget);
-      // console.log("lastIndex-target", this.cards[this.lastIndex].originalTarget);
-      // console.log("isFreeScrolling", this.isFreeScrolling);
-      // console.log("");
       // this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.cards[this.lastIndex].originalTarget;
     }
     else if ( !this.options.freeScroll && index == this.selectedIndex ) {
@@ -2995,6 +2963,14 @@
 
 
 
+
+
+
+
+
+
+
+
 // steady (static) slide
 ( function( window, factory ) {
   // browser global
@@ -3012,8 +2988,6 @@
     this.height = 0;
   }
 
-  // var proto = StaticSlide.prototype;
-
   StaticSlide.prototype.addCard = function( card ) {
     this.cards.push( card );
 
@@ -3022,10 +2996,10 @@
 
     // first card stuff
     if ( this.cards.length == 1 ) {
-      this.x = card.x; // x comes from first card
+      this.x = card.originalTarget; // x comes from first card
       var startMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
       this.startMargin = card[startMargin];
-      this.target = this.cards[0].originalTarget;
+      this.target = card.originalTarget;
     }
     
     // this.updateSize();
@@ -3084,34 +3058,42 @@
     if ( !this.options.fade ) {
       return;
     }
-    // this.identifyStaticSlides();
-    
+    this.hasStaticSlide = true;
     this.on("activate", this.activateStaticSlide);
-    this.on("resize", this.updateStaticSlides);
+  };
+  
+  proto.activateStaticSlide = function() {
+    // this.updateStaticSlides();
+    this.emitEvent("activateStaticSlides");
   };
 
-  // proto.addStaticSlides = function() {
-  //   // this.staticSlides = new StaticSlide(this);
-  // };
-  
-  // proto.identifyStaticSlides = function () {
-  //   var slides = [],
-  //       _this = this;
+  var _positionCards = proto._positionCards;
+  proto._positionCards = function( index ) {
+    _positionCards.apply( this, arguments );
+    if (!this.options.fade) {
+      return;
+    }
 
-  //   this.cards.forEach(function (card) {
-  //     if (true) {
-  //       //
-  //     }
-  //   });
+    // keep track of cardX (all carousel cards width) for wrap-around
+    var lastCard = this.cards[this.cards.length - 1];
+    this.slideableWidth = lastCard.originalTarget + lastCard.width;
+    // در این مرحله ممکن است کاروسل سی اس اس اینلاینی برای تنظیم ارتفاع نگرفته باشد
+    // و از آنجایی که پوزیشن همه ی کارتها اپسولوت است ارتفاعش صفر باشد؛ که این حالت باعث می شود متد
+    // updateSliderWidth() مقدار undefined را برگرداند
 
-  //   this.staticSlides = utils.makeArray(cardElems).map(function (elem) {
-  //     return new Card(elem, _this);
-  //   });
-  // };
-
-  proto.activateStaticSlide = function() {
+    // slides
+    // برای staticSlide ها هم باید مثل کارت ها متدی مثل 
+    // متد _containSlides نوشته شود که البته احتمالا باید متدی جداگانه و متفاوت باشد
     this.updateStaticSlides();
-    this.emitEvent("activateStaticSlides");
+
+    // this._containStaticSlides();
+    
+    // // update slidesWidth
+    // this.slidesWidth = len ? this.getLastSlide().target - this.slides[0].target : 0;
+  };
+
+  proto._containStaticSlides = function() {
+    // 
   };
 
   proto.updateStaticSlides = function() {
@@ -3150,17 +3132,43 @@
     }, this );
     // last staticSlide
     staticSlide.updateTarget();
-    // update .selectedStaticSlide
+
+    this.correctSelectedStaticSlideIndex();
     this.updateSelectedStaticSlide();
   };
 
+  // correct the selected staticSlide on resize
+  proto.correctSelectedStaticSlideIndex = function() {
+    this.selectedIndex = Math.min(this.selectedIndex, this.staticSlides.length - 1);
+
+    var prevSCIndex = this.cards.indexOf(this.selectedCard);    // previous selected card index
+    if (prevSCIndex < 0) {
+      return;
+    }
+
+    // fardin TODO :
+    // این متد در حال حاضر بعد از ریساز شدن صفحه ایندکس انتخاب شده جدید را بر مبنای 
+    // شماره اولین کارت اسلاید انتخاب شده قبلی بدست می آورد ولی شاید بهتر باشد که بر مبنای 
+    // این باشد که اسلاید انتخاب شده جدید آن اسلایدی باشد که از اسلایدهای دیگر
+    // تعداد کارتهای مشترک بیشتری با اسلاید انتخاب شده قدیمی داشته باشد
+    var staticSlidesLength = this.staticSlides.length;
+    for (var i = 0; i < staticSlidesLength; i++) {
+      var staticSlide = this.staticSlides[i];
+      var firstCardIndex = this.cards.indexOf(staticSlide.cards[0]);
+      if (prevSCIndex >= firstCardIndex && prevSCIndex < firstCardIndex + staticSlide.cards.length) {
+        this.selectedIndex = i;
+        break;
+      }
+    }
+  };
+
   proto.updateSelectedStaticSlide = function() {
-    // var staticSlide = this.staticSlides[ this.selectedIndex ];
     var staticSlide = this.staticSlides[ this.selectedIndex ];
     // selectedIndex could be outside of staticSlides, if triggered before resize()
     if ( !staticSlide ) {
       return;
     }
+
     // unselect previous selected staticSlide
     this.unselectSelectedStaticSlide();
     // update new selected staticSlide
@@ -3169,15 +3177,14 @@
     this.selectedCards = staticSlide.cards;
     // this.selectedElements = staticSlide.getCardElements();
     
+    // HACK: selectedCard & selectedElement is first card in slide, backwards compatibility
+    this.selectedCard = staticSlide.cards[0];
+    // this.selectedElement = this.selectedElements[0];
     // selectedCard
     // را به منظور استفاده در متد هایی که از 
     // selectedStaticSlide
     // استفاده نکرده اند، نیاز داریم، در واقع این کار باعث می شود در بعضی متد ها که به 
     // تارگت المان سلکت شده نیاز است می توان جایگزین بازنویسی یا تغییر آن متد شود
-
-    // HACK: selectedCard & selectedElement is first card in slide, backwards compatibility
-    this.selectedCard = staticSlide.cards[0];
-    // this.selectedElement = this.selectedElements[0];
   };
 
   proto.unselectSelectedStaticSlide = function() {
@@ -3205,12 +3212,6 @@
   proto.getIndexInRange = function (index) {
     if ( !this.options.fade ) {
       return getIndexInRange.apply( this, arguments );
-
-      // نکته مهم: اگر یک ریترن خالی در اینجا باشد (به جای اینکه قبل از متد بالا باشد) و
-      //  متدی که رویش اپلای زدیم هم مقداری را ریترن کرده باشد آن مقدار اینجا از دست
-      //  می رود... پس گذاشتن ریترن خالی در اینجا درست نیست
-      // مگر اینکه مطمئن باشیم که آن متد قرار نیست مقداری را ریترن کند
-      // // // // return;
     }
     index = parseInt(+index) || 0;
     index = Math.min(this.staticSlides.length - 1, index);
@@ -3238,6 +3239,7 @@
 
     var prevIndex = this.selectedIndex;
     this.selectedIndex = slideIndex;
+    
     this.updateSelectedStaticSlide();
     if (isInstant) {
       this.positionSliderAtSelected();
@@ -3294,8 +3296,74 @@
     this.select( initialIndex, false, true );
   };
 
+  var dragEnd = proto.dragEnd;
+  proto.dragEnd = function( event, pointer ) {
+    if ( !this.options.fade ) {
+      dragEnd.apply( this, arguments );
+      return;
+    }
+
+    if ( !this.isDraggable ) {
+      return;
+    }
+    if ( this.options.freeScroll ) {
+      this.isFreeScrolling = true;
+    }
+    // set selectedIndex based on where carousel will end up
+    var index = this.dragEndRestingSelect();
+
+    if ( this.options.freeScroll && !this.options.wrapAround ) {
+      // if free-scroll & not wrap around
+      // do not free-scroll if going outside of bounding slides
+      // so bounding slides can attract slider, and keep it in bounds
+      var restingX = this.getRestingPosition();
+      this.isFreeScrolling = -restingX > this.staticSlides[0].target && -restingX < this.staticSlides[this.staticSlides.length - 1].target;
+    }
+    else if ( !this.options.freeScroll && index == this.selectedIndex ) {
+      // boost selection if selected index has not changed
+      index += this.dragEndBoostSelect();
+    }
+    delete this.previousDragX;
+    // apply selection
+    // TODO refactor this, selecting here feels weird
+    // HACK, set flag so dragging stays in correct direction
+    this.isDragSelect = this.options.wrapAround;
+    this.select( index );
+    delete this.isDragSelect;
+    this.dispatchEvent( 'dragEnd', event, [ pointer ] );
+  };
+  
+  var getSlideDistance = proto.getSlideDistance;
+  proto.getSlideDistance = function( x, index ) {
+    if ( !this.options.fade ) {
+      return getSlideDistance.apply( this, arguments );
+    }
+
+    // var len = this.slides.length;
+    var len = this.staticSlides.length;
+    // wrap around if at least 2 slides
+    var isWrapAround = this.options.wrapAround && len > 1;
+    var slideIndex = isWrapAround ? utils.modulo( index, len ) : index;
+    // var slide = this.slides[ slideIndex ];
+    var staticSlide = this.staticSlides[ slideIndex ];
+    if ( !staticSlide ) {
+      return null;
+    }
+    // add distance for wrap-around slides
+    var wrap = isWrapAround ? this.slideableWidth * Math.floor( index / len ) : 0;
+    return x - ( staticSlide.target + wrap );
+  };
+
   return StaticSlide;
 }));
+
+
+
+
+
+
+
+
 
 
 
@@ -3333,15 +3401,17 @@
     }
     // position cards at selected target
 
-    // var staticSlideTargetX = this.target - this.x;
-    // fardin TODO
-    // این عبارت موقتا (بدلیل وجود فاصله بین کارتها که ناشی از پدینگ و مارجین نیست)
-    // جایگزین شده و باید با عبارت درستی جایگزین شود
-    var staticSlideTargetX = 0;
+    var staticSlideTargetX = this.target - this.x;
+    // // fardin TODO
+    // // این عبارت موقتا (بدلیل وجود فاصله بین کارتها که ناشی از پدینگ و مارجین نیست)
+    // // جایگزین شده و باید با عبارت درستی جایگزین شود
+    // var staticSlideTargetX = 0;
 
-    var firstCardX = this.cards[0].x;
+    // var firstCardX = this.cards[0].x;
+    var firstCardX = this.cards[0].originalTarget;
     this.cards.forEach( function( card ) {
-      var targetX = card.x - firstCardX - staticSlideTargetX;
+      // var targetX = card.x - firstCardX - staticSlideTargetX;
+      var targetX = card.originalTarget - firstCardX - staticSlideTargetX;
       card.renderPosition( targetX );
     });
   };
@@ -3369,6 +3439,7 @@
     this.fadeIndex = this.selectedIndex;
     this.prevSelectedIndex = this.selectedIndex;
     this.on( 'select', this.onSelectFade );
+    this.on( 'resize', this.onResizeFade );
     this.on( 'dragEnd', this.onDragEndFade );
     this.on( 'settle', this.onSettleFade );
     this.on( 'activate', this.onActivateFade );
@@ -3390,17 +3461,45 @@
 
   /* ---- events ---- */
 
-  proto.onSelectFade = function() {
+  proto.onResizeFade = function() {
     // in case of resize, keep fadeIndex within current count
     this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
+    // this.fadeIndex = this.correctPrevSelectedIndex();
+    
+    // this.correctSelectedStaticSlideIndex();
+    this.prevSelectedIndex = this.selectedIndex;
+    
+    // this.updateSelectedStaticSlide();
+    // this.updateStaticSlidesFade();
+  };
+
+  proto.onSelectFade = function() {
+    // // in case of resize, keep fadeIndex within current count
+    // this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
+    this.fadeIndex = this.prevSelectedIndex;
     this.prevSelectedIndex = this.selectedIndex;
   };
+
+  // proto.updateStaticSlidesFade = function() {
+  //   // if (!this.selectedStaticSlide) {
+  //   //   return;
+  //   // }
+  //   // set full and 0 opacity on selected & faded staticSlides
+  //   this.selectedStaticSlide.setOpacity( 1 );
+  //   var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
+  //   if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
+  //     // this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
+  //     fadedStaticSlide.setOpacity( 0 );
+  //   }
+  // };
 
   proto.onSettleFade = function() {
     delete this.didDragEnd;
     if ( !this.options.fade ) {
       return;
     }
+
+    // this.updateStaticSlidesFade();
     // set full and 0 opacity on selected & faded staticSlides
     this.selectedStaticSlide.setOpacity( 1 );
     var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
@@ -3457,7 +3556,7 @@
     if ( this.staticSlides.length < 2 ) {
       return;
     }
-    // debugger;
+
     // get staticSlides to fade-in & fade-out
     var indexes = this.getFadeIndexes();
     var fadeStaticSlideA = this.staticSlides[ indexes.a ];
@@ -3474,6 +3573,11 @@
     if ( this.isDragging ) {
       fadeHideIndex = progress > 0.5 ? indexes.a : indexes.b;
     }
+
+    if (this.fadeHideIndex > 0) {
+      this.fadeHideIndex = Math.min(this.fadeHideIndex, this.staticSlides.length - 1);
+    }
+
     var isNewHideIndex = this.fadeHideIndex != undefined &&
       this.fadeHideIndex != fadeHideIndex &&
       this.fadeHideIndex != indexes.a &&

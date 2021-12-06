@@ -41,6 +41,12 @@
 .gallery-thumbnails .card {
     opacity: 0.4;
 }
+.gallery-thumbnails .slider-cards-container:not(.is-pointer-down) .card {
+    cursor: pointer;
+}
+.gallery-thumbnails .card a {
+    pointer-events: none;
+}
 .gallery-thumbnails .card.nav-selected {
     border: 2px solid #fff;
     border-collapse: collapse;
