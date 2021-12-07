@@ -999,7 +999,9 @@
       var isRtl = this.options.rightToLeft,
           fCardPos = getPosition(this.cards[0].element, isRtl),
           sCardPos = getPosition(this.cards[1].element, isRtl),
-          cardsDistance = Math.abs(sCardPos.start - fCardPos.start),
+          cardsDistance_ptp = Math.abs(sCardPos.start - fCardPos.start),
+          cardsDistance_trgt = Math.abs(this.cards[1].originalTarget - this.cards[0].originalTarget),
+          cardsDistance = Math.max(cardsDistance_ptp, cardsDistance_trgt),
           slideLength = Math.floor(this.viewportWidth / cardsDistance);
 
       this.slideCardsLength = slideLength > 0 ? slideLength : 1;
@@ -1055,7 +1057,8 @@
       // var isCorrectIndex = slideIndex <= this.lastIndex,
 
       if (this.options.wrapAround || isWrap) {
-        slideIndex = utils.modulo(slideIndex, this.cards.length);
+        // slideIndex = utils.modulo(slideIndex, this.cards.length);
+        slideIndex = utils.modulo(slideIndex, this.lastIndex + 1);
       } else {
         slideIndex = this.getIndexInRange(slideIndex);
       }
@@ -1084,15 +1087,15 @@
         this.dispatchEvent( 'change', null, [slideIndex] );
       }
     };
-    proto.prev = function () {
+    proto.prev = function (isWrap, isInstant) {
       var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
           index = -step + this.selectedIndex;
-      this.select(index);
+      this.select(index, isWrap, isInstant);
     };
-    proto.next = function () {
+    proto.next = function (isWrap, isInstant) {
       var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
           index = step + this.selectedIndex;
-      this.select(index);
+      this.select(index, isWrap, isInstant);
     };
     proto.updateSelectedCard = function () {
       var card = this.cards[this.selectedIndex];
@@ -2016,7 +2019,7 @@
     };
     // bind move and end events
     this._bindPostStartEvents( event );
-    // this.dispatchEvent( 'pointerDown', event, [ pointer ] );
+    this.dispatchEvent( 'pointerDown', event, [ pointer ] );
   };
 
   var focusNodes = {
@@ -3680,6 +3683,179 @@
 
 
 
+
+
+
+// player & autoPlay
+( function( window, factory ) {
+  // browser global
+  factory(
+    window.EvEmitter,
+    window.utils,
+    window.FCarousel
+  );
+}( window, function factory( EvEmitter, utils, FCarousel ) {
+
+  // -------------------------- Player -------------------------- //
+  function Player( parent ) {
+    this.parent = parent;
+    this.state = 'stopped';
+    // visibility change event handler
+    this.onVisibilityChange = this.visibilityChange.bind( this );
+    this.onVisibilityPlay = this.visibilityPlay.bind( this );
+  }
+
+  Player.prototype = Object.create( EvEmitter.prototype );
+
+  // start play
+  Player.prototype.play = function() {
+    if ( this.state == 'playing' ) {
+      return;
+    }
+    // do not play if page is hidden, start playing when page is visible
+    var isPageHidden = document.hidden;
+    if ( isPageHidden ) {
+      document.addEventListener( 'visibilitychange', this.onVisibilityPlay );
+      return;
+    }
+
+    this.state = 'playing';
+    // listen to visibility change
+    document.addEventListener( 'visibilitychange', this.onVisibilityChange );
+    // start ticking
+    this.tick();
+  };
+
+  Player.prototype.tick = function() {
+    // do not tick if not playing
+    if ( this.state != 'playing' ) {
+      return;
+    }
+
+    var time = this.parent.options.autoPlay;
+    // default to 3 seconds
+    time = typeof time == 'number' ? time : 3000;
+    var _this = this;
+    // HACK: reset ticks if stopped and started within interval
+    this.clear();
+    this.timeout = setTimeout( function() {
+      _this.parent.next( true );
+      _this.tick();
+    }, time );
+  };
+
+  Player.prototype.stop = function() {
+    this.state = 'stopped';
+    this.clear();
+    // remove visibility change event
+    document.removeEventListener( 'visibilitychange', this.onVisibilityChange );
+  };
+
+  Player.prototype.clear = function() {
+    clearTimeout( this.timeout );
+  };
+
+  Player.prototype.pause = function() {
+    if ( this.state == 'playing' ) {
+      this.state = 'paused';
+      this.clear();
+    }
+  };
+
+  Player.prototype.unpause = function() {
+    // re-start play if paused
+    if ( this.state == 'paused' ) {
+      this.play();
+    }
+  };
+
+  // pause if page visibility is hidden, unpause if visible
+  Player.prototype.visibilityChange = function() {
+    var isPageHidden = document.hidden;
+    this[ isPageHidden ? 'pause' : 'unpause' ]();
+  };
+
+  Player.prototype.visibilityPlay = function() {
+    this.play();
+    document.removeEventListener( 'visibilitychange', this.onVisibilityPlay );
+  };
+
+  // -------------------------- FCarousel -------------------------- //
+
+  // utils.extend( FCarousel.defaults, {
+  //   pauseAutoPlayOnHover: true
+  // });
+  $.extend( FCarousel.defaults, {
+    pauseAutoPlayOnHover: true
+  });
+
+  FCarousel.createMethods.push('_createPlayer');
+
+  var proto = FCarousel.prototype;
+  proto._createPlayer = function() {
+    this.player = new Player( this );
+
+    this.on( 'activate', this.activatePlayer );
+    this.on( 'uiChange', this.stopPlayer );
+    this.on( 'pointerDown', this.stopPlayer );
+    this.on( 'deactivate', this.deactivatePlayer );
+  };
+
+  proto.activatePlayer = function() {
+    if ( !this.options.autoPlay ) {
+      return;
+    }
+    this.player.play();
+    this.element.addEventListener( 'mouseenter', this );
+  };
+
+  // Player API, don't hate the ... thanks I know where the door is
+
+  proto.playPlayer = function() {
+    this.player.play();
+  };
+
+  proto.stopPlayer = function() {
+    this.player.stop();
+  };
+
+  proto.pausePlayer = function() {
+    this.player.pause();
+  };
+
+  proto.unpausePlayer = function() {
+    this.player.unpause();
+  };
+
+  proto.deactivatePlayer = function() {
+    this.player.stop();
+    this.element.removeEventListener( 'mouseenter', this );
+  };
+
+  // ----- mouseenter/leave ----- //
+
+  // pause auto-play on hover
+  proto.onmouseenter = function() {
+    if ( !this.options.pauseAutoPlayOnHover ) {
+      return;
+    }
+    this.player.pause();
+    this.element.addEventListener( 'mouseleave', this );
+  };
+
+  // resume auto-play on hover off
+  proto.onmouseleave = function() {
+    this.player.unpause();
+    this.element.removeEventListener( 'mouseleave', this );
+  };
+
+  // -----  ----- //
+
+  FCarousel.Player = Player;
+
+  return FCarousel;
+
+}));
 
 
 
