@@ -153,6 +153,31 @@
     }
     return elem;
   };
+
+  utils.hasAllClasses = function(elem, classesStr) {
+    var flag = true;
+
+    classesStr.replace(/\s+/g, ' ').trim();
+    var classesArr = classesStr.split(" ");
+       
+    // var i = 0;
+    // while (i < classesArr.length) {
+    //     if (classesArr[i] === '') {
+    //         classesArr.splice(i,1);
+    //     }
+    //     else {
+    //         i++;
+    //     }
+    // }
+    
+    for(var i = 0; i < classesArr.length; i++) {
+        if (!$(elem).hasClass(classesArr[i])) {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
+  }
   
   // ----- debounceMethod ----- //
   utils.debounceMethod = function( _class, methodName, threshold ) {
@@ -699,6 +724,11 @@
   proto.setPosition = function(x) {
     // this.x = x;
     this.originalTarget = x;
+
+    var endMargin = this.parent.originSide == 'left' ? 'marginRight' : 'marginLeft';
+    // this.originalEndTarget = x + this.width || this.getOuterWidth(this.element) - this[endMargin] || this.element.style[endMargin];
+    this.originalEndTarget = x + this.width - this[endMargin];
+    
     this.updateTarget();
     this.renderPosition(x);
   };
@@ -1071,6 +1101,7 @@
       var prevIndex = this.selectedIndex;
       this.selectedIndex = slideIndex;
       this.updateSelectedCard();
+      this.updateInViewportCards();
       if (isInstant) {
         this.positionSliderAtSelected();
       } else {
@@ -1107,6 +1138,34 @@
       // update new selected card
       this.selectedCard = card;
       card.select();
+    };
+    proto.updateInViewportCards = function() {
+      // fardin TODO
+      // برای استاتیک اسلاید دار ها این متد باز نویسی (اور رایت) شود
+      // و همچنین تنظیمات wrapAround هم برای این متد انجام گیرد
+
+      cardElems = [];
+      // if (this.isPointerDown || this.isFreeScrolling) {
+      //   // ....
+      //   // this.inViewportCards = cardElems;
+      //   // return;
+      // }
+      
+      var selectedIndex = this.selectedIndex,
+          len = this.cards.length,
+          fCInVpT = this.cards[selectedIndex].originalTarget;   // originalTarget of first card in viewport
+          
+      for ( var i = selectedIndex; i < len ; i++ ) {
+        var card = this.cards[i],
+            cardElemsWidth = card.originalEndTarget - fCInVpT;
+        if (cardElemsWidth <= this.viewportWidth || i == selectedIndex || selectedIndex == this.lastIndex) {
+          cardElems = cardElems.concat(card);
+        }
+        else {
+          break;
+        }
+      }
+      this.inViewportCards = cardElems;
     };
     proto.unselectSelectedCard = function() {
       if ( this.selectedCard ) {
@@ -1182,6 +1241,15 @@
     //   this.cards.indexOf(card);
     // };
     /**
+     * get card elements
+     * @returns {Array} cardElems
+     */
+    proto.getCardElements = function() {
+      return this.cards.map( function( card ) {
+        return card.element;
+      });
+    };
+    /**
      * get parent card from an element
      * @param {Element} elem
      * @returns {FCarousel.Card} card
@@ -1195,6 +1263,34 @@
       // try to get parent card elem
       elem = $(elem).parents(this.constructor.selectors.cards)[0];
       return this.getCard(elem);
+    };
+    /**
+     * get cards adjacent to a slide
+     * @param {Integer} adjCount - number of adjacent slides
+     * @param {Integer} index - index of slide to start
+     * @returns {Array} cards - array of Flickity.Cards
+     */
+    proto.getAdjacentCardElements = function( adjCount, index ) {
+      adjCount = adjCount || 0;
+      index = index === undefined ? this.selectedIndex : index
+
+      var cLen = this.cards.length,
+          iVpCLen = this.inViewportCards.length;
+      if ( iVpCLen + ( adjCount * 2 ) >= cLen ) {
+        return this.getCardElements();
+      }
+
+      var cardElems = [];
+      var startIndex = Math.max(index - adjCount, 0),
+          endIndex = Math.min(index + iVpCLen + adjCount - 1, cLen- 1);
+      for ( var i = startIndex; i <= endIndex; i++ ) {
+        var cardIndex = this.options.wrapAround ? utils.modulo( i, len ) : i;
+        var card = this.cards[cardIndex];
+        // if ( card ) {
+          cardElems = cardElems.concat(card.element);
+        // }
+      }
+      return cardElems;
     };
 
     // -------------------------- events -------------------------- //
@@ -2539,11 +2635,11 @@
 
   // ----- staticClick ----- //
   ScrollHandle.prototype.staticClick = function( event, pointer ) {
-    // get clickedCell, if cell was clicked
-    // var clickedCell = this.getParentCell( event.target );
-    // var cellElem = clickedCell && clickedCell.element;
-    // var cellIndex = clickedCell && this.cells.indexOf( clickedCell );
-    // this.dispatchEvent( 'staticClick', event, [ pointer, cellElem, cellIndex ] );
+    // get clickedCard, if card was clicked
+    // var clickedCard = this.getParentCard( event.target );
+    // var cardElem = clickedCard && clickedCard.element;
+    // var cardIndex = clickedCard && this.cards.indexOf( clickedCard );
+    // this.dispatchEvent( 'staticClick', event, [ pointer, cardElem, cardIndex ] );
   };
 
   // ----- scroll ----- //
@@ -3244,6 +3340,7 @@
     this.selectedIndex = slideIndex;
     
     this.updateSelectedStaticSlide();
+    this.updateInViewportCards();
     if (isInstant) {
       this.positionSliderAtSelected();
     } else {
@@ -3856,6 +3953,113 @@
   return FCarousel;
 
 }));
+
+
+// ready for lazyload
+( function( window, factory ) {
+  // browser global
+  factory(
+    window,
+    window.FCarousel,
+    window.utils
+  );
+}( window, function factory( window, FCarousel, utils ) {
+  'use strict';
+  
+  // -------------------------- LazyLoadPreparer -------------------------- //
+  /**
+   * class to handle loading images (prepar carousel images for lazy load)
+   */
+  function LazyLoadPreparer( imgItem, fCarousel ) {
+    this.imgItem = imgItem;
+    this.fCarousel = fCarousel;
+    this.prepareLazyload();
+  };
+  
+  LazyLoadPreparer.prototype.prepareLazyload = function() {
+    // change image item classNames
+    var bPClassesArray = this.fCarousel.options.beforeLazyLoadPrepareClass.split(" "),
+        aPClassesArray = this.fCarousel.options.afterLazyLoadPrepareClass.split(" "),
+        elemClassList = this.imgItem.classList;
+        
+    // کد زیر درست عمل نمی کند چرا که فرمت درست برای آرگومان های
+    // ارسالی به متدهای زیر به این صورت است:
+    // htmlElem.classList.remove('progressive', 'pre-load')
+    // this.imgItem.classList.remove.apply(bPClassesArray).add(aPClassesArray);
+
+    elemClassList.remove.apply(elemClassList, bPClassesArray);
+    elemClassList.add.apply(elemClassList, aPClassesArray);
+  };
+
+  // -------------------------- FCarousel -------------------------- //
+  // ----- FCarousel defaults ----- //
+  $.extend( FCarousel.defaults, {
+    lazyLoad: true,
+    beforeLazyLoadPrepareClass: 'progressive pre-load',
+    afterLazyLoadPrepareClass: 'progressive replace'
+  });
+  
+  // $.extend( FCarousel.selectors, {
+  //   beforeLazyLoadPrepareClass: 'progressive pre-load',
+  //   afterLazyLoadPrepareClass: 'progressive replace'
+  // });
+
+  FCarousel.createMethods.push('_createLazyloadPreparer');
+
+  var proto = FCarousel.prototype;
+  proto._createLazyloadPreparer = function() {
+    this.on( 'select', this.readyToLazyLoading );
+    // this.on( 'drag', this.readyToLazyLoading );
+  };
+
+  proto.readyToLazyLoading = function() {
+    var lazyLoad = this.options.lazyLoad;
+    if ( !lazyLoad ) {
+      return;
+    }
+    // get adjacent cards, use lazyLoad option for adjacent count
+    var adjCount = typeof lazyLoad == 'number' ? lazyLoad : 0;
+    var cardElems = this.getAdjacentCardElements(adjCount);
+    var bPClasses = this.options.beforeLazyLoadPrepareClass;
+
+    // get lazy images in those cards
+    var lazyImages = [];
+    cardElems.forEach(function(cardElem) {
+      var lazyCardImages = getCardLazyImages(cardElem, bPClasses);
+      lazyImages = lazyImages.concat( lazyCardImages );
+    });
+    
+    // load lazy images
+    lazyImages.forEach( function(img) {
+      new LazyLoadPreparer( img, this );
+    }, this );
+  };
+
+  function getCardLazyImages(cardElem, bPClasses) {
+    // check if card element is lazy image
+    if ( cardElem.nodeName == 'IMG' && utils.hasAllClasses(cardElem, bPClasses) ) {
+      return [ cardElem ];
+    }
+
+    // // select lazy images in card
+    // var bPSelector = "." + bPClasses.replace(/\s+/g, ' ').trim().replace(" ", ".");
+    // bPSelector = bPSelector.replace("..", ".");
+    // var imgs = cardElem.querySelectorAll(bPSelector);
+
+    // select lazy images in card
+    var imgs = cardElem.getElementsByClassName(bPClasses);
+
+    return utils.makeArray(imgs);
+  }
+
+  // -----  ----- //
+  FCarousel.LazyLoadPreparer = LazyLoadPreparer;
+
+  return FCarousel;
+}));
+
+
+
 
 
 

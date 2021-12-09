@@ -6,122 +6,90 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
 
         // start
         var pItem = document.getElementsByClassName('progressive replace'),
-            pl_pItem = document.getElementsByClassName('progressive pre-load'),
-            carousels = $("[data-ride]"),
             pCount,
-            pl_pCount,
-            timer,
-            timer_two;
+            timer;
         // scroll and resize events
         window.addEventListener('scroll', scroller, false);
         window.addEventListener('resize', scroller, false);
-        carousels.each(function () {
-            var caros = this;
-            caros.addEventListener('carousel.moveend', carouselChange, false);
-            caros.addEventListener('carousel.picturechanged', carouselChange, false);
-            caros.addEventListener('carousel.drag', carouselChange, false);
-        });
 
         // DOM mutation observer
         if (MutationObserver) {
             var observer = new MutationObserver(function () {
                 if (pItem.length !== pCount) inView();
-                if (pl_pItem.length !== pl_pCount) inCarousel();
             });
             observer.observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
         }
         // initial check
         inView();
-        inCarousel();
 
+        var waiting,
+            endScrollHandle;
         // throttled scroll/resize
         function scroller() {
-            timer = timer || setTimeout(function () {
-                timer = null;
+            //timer = timer || setTimeout(function () {
+            //    timer = null;
+            //    inView();
+            //}, 300);
+
+            // با این روش (به نسبت روش بالا -همان که از متغییر تایمر استفاده کرده-) مزیت اطمینان از عملکرد بعد از آخرین تغییرات را خواهیم داشت
+            if (waiting) {
+                return;
+            }
+            waiting = true;
+            // clear previous scheduled endScrollHandle
+            clearTimeout(endScrollHandle);
+
+            inView();
+
+            setTimeout(function () {
+                waiting = false;
+            }, 300);
+
+            // schedule an extra execution of scroll() after 200ms
+            // in case the scrolling stops in next 100ms
+            endScrollHandle = setTimeout(function () {
                 inView();
-            }, 300);
+            }, 600);
         }
-
-        // آماده سازی عکس های کاروسل ها با ورود به محدوده دید
-        // carousel move/change item
-        function carouselChange() {
-            timer_two = timer_two || setTimeout(function () {
-                timer_two = null;
-                inCarousel();
-            }, 300);
-        }
-        // image in carousel view-box ?
-        function inCarousel() {
-            if (pl_pItem.length) requestAnimationFrame(function () {
-                var caros_view_box,
-                    bL, bR, imgBCR, p = 0, i = 0,
-                    loading_hrefs = [], item_href;
-                while (p < pl_pItem.length) {
-                    caros_view_box = $(pl_pItem).closest(".slider-cards-container")[0];
-                    bL = caros_view_box ? caros_view_box.getBoundingClientRect().left : 0;
-                    bR = caros_view_box ? caros_view_box.getBoundingClientRect().right : $(window).innerWidth();
-
-                    imgBCR = pl_pItem[p].getBoundingClientRect();
-                    if (imgBCR.right > bL && imgBCR.left < bR) {
-                        item_href = pl_pItem[p].getAttribute('data-href') || pl_pItem[p].href;
-
-                        if (item_href && loading_hrefs.indexOf(item_href) < 0) {
-                            loading_hrefs.push(item_href);
-                        }
-                        // دستور زیر حتما باید بعد از مواردی که بستگی به عدد پی دارند بیاید!ااا
-                        $(pl_pItem[p]).removeClass("pre-load").addClass("replace");
-                    }
-                    else p++;
-                }
-                // آماده سازی -تعویض نام کلاس- عکس های تکراری
-                while (i < pl_pItem.length) {
-                    item_href = pl_pItem[i].getAttribute('data-href') || pl_pItem[i].href;
-                    if (item_href && loading_hrefs.indexOf(item_href) > -1) {
-                        $(pl_pItem[i]).removeClass("pre-load").addClass("replace");
-                    }
-                    else i++;
-                }
-                pl_pCount = pl_pItem.length;
-            });
-        } //
 
         // image in view?
         function inView() {
             if (pItem.length) requestAnimationFrame(function () {
                 var wH = window.innerHeight, cRect, cT, cH, p = 0;
-                var loading_hrefs = [], item_href, i = 0;
+                var loading_hrefs = [], item_href, i = 0;  // added by fardin
 
                 while (p < pItem.length) {
+                    item_href = pItem[p].getAttribute('data-href') || pItem[p].href;
                     cRect = pItem[p].getBoundingClientRect();
                     cT = cRect.top;
                     cH = cRect.height;
                     if (0 < cT + cH && wH > cT) {
                         loadFullImage(pItem[p]);
-                        // ایجاد آرایه نمونه آدرس ها
-                        item_href = pItem[p].getAttribute('data-href') || pItem[p].href;
+                        pItem[p].classList.remove('replace');
+
+                        // added by fardin
                         if (item_href && loading_hrefs.indexOf(item_href) < 0) {
                             loading_hrefs.push(item_href);
-                        } // 
-
-                        pItem[p].classList.remove('replace');
+                        } // end of fardin code
                     }
                     else p++;
                 }
-                // لود عکس های تکراری
+                // added by fardin
                 while (i < pItem.length) {
                     item_href = pItem[i].getAttribute('data-href') || pItem[i].href;
                     if (item_href && loading_hrefs.indexOf(item_href) > -1) {
-                        loadFullImage(pItem[i]);
+
+                        loadFullImage(pItem[i], undefined, true);
                         pItem[i].classList.remove('replace');
                     }
                     else i++;
-                } // 
+                } // end of fardin code
                 pCount = pItem.length;
             });
         }
 
         // replace with full image
-        function loadFullImage(item, retry) {
+        function loadFullImage(item, retry, isRepetitiveImage) {
             var href = item && (item.getAttribute('data-href') || item.href);
             if (!href) return;
             // load image
@@ -130,11 +98,19 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
             if (ds) {
                 if (ds.srcset) img.srcset = ds.srcset;
                 if (ds.sizes) img.sizes = ds.sizes;
+                if (ds.width) img.width = ds.width;
+                if (ds.height) img.height = ds.height;
+                if (ds.sizes) img.alt = ds.alt;
             }
             img.onload = addImg;
             retry = 1 + (retry || 0);
             if (retry < 3) img.onerror = function () {
-                setTimeout(function () { loadFullImage(item, retry); }, retry * 3000);
+                item.classList.add("img-load-err");
+                setTimeout(function () { loadFullImage(item, retry, isRepetitiveImage); }, retry * 3000);
+            };
+            else if (!isRepetitiveImage) img.onerror = function () {
+                //UnitEs.imageNotLoaded(img.src, item);
+                UnitEs.imageNotLoaded(img.src);
             };
             img.className = 'reveal';
             img.src = href;
@@ -142,6 +118,8 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
             // replace image
             function addImg() {
                 requestAnimationFrame(function () {
+                    item.classList.remove("img-load-err");
+
                     // disable click
                     if (href === item.href) {
                         item.style.cursor = 'default';

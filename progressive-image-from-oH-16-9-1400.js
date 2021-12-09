@@ -54,15 +54,19 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
         function inCarousel() {
             if (pl_pItem.length) requestAnimationFrame(function () {
                 var caros_view_box,
-                    bL, bR, imgBCR, p = 0, i = 0,
+                    bRect, bL, bR, cRect, cR, cL, p = 0, i = 0,
                     loading_hrefs = [], item_href;
                 while (p < pl_pItem.length) {
                     caros_view_box = $(pl_pItem).closest(".slider-cards-container")[0];
-                    bL = caros_view_box ? caros_view_box.getBoundingClientRect().left : 0;
-                    bR = caros_view_box ? caros_view_box.getBoundingClientRect().right : $(window).innerWidth();
+                    bRect = caros_view_box.getBoundingClientRect();
+                    bL = caros_view_box ? bRect.left : 0;
+                    bR = caros_view_box ? bRect.right : $(window).innerWidth();
 
-                    imgBCR = pl_pItem[p].getBoundingClientRect();
-                    if (imgBCR.right > bL && imgBCR.left < bR) {
+                    cRect = pl_pItem[p].getBoundingClientRect();
+                    cR = cRect.right;
+                    cL = cRect.left;
+
+                    if (cR > bL && cL < bR) {
                         item_href = pl_pItem[p].getAttribute('data-href') || pl_pItem[p].href;
 
                         if (item_href && loading_hrefs.indexOf(item_href) < 0) {
@@ -130,6 +134,9 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
             if (ds) {
                 if (ds.srcset) img.srcset = ds.srcset;
                 if (ds.sizes) img.sizes = ds.sizes;
+                //if (ds.width) img.width = ds.width;
+                //if (ds.height) img.height = ds.height;
+                if (ds.alt) img.alt = ds.alt;
             }
             img.onload = addImg;
             retry = 1 + (retry || 0);
@@ -155,6 +162,10 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
                         // remove preview image
                         if (pImg) {
                             if (pImg.alt) img.alt = pImg.alt;
+                            img.className = pImg.className;
+                            img.classList.remove('preview');
+                            if (pImg.attributes["width"]) img.width = pImg.attributes["width"].value;
+                            if (pImg.attributes["height"]) img.height = pImg.attributes["height"].value;
                             item.removeChild(pImg);
                         }
                         img.classList.remove('reveal');
