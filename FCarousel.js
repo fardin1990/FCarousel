@@ -848,11 +848,12 @@
       selectedAttraction: 0.025,
       discretePlacement: true,
       wrapAround: false,
+      // scrollbar: false,
+      scrollbarMutualControl: true,
       contain: true,
       step: 1,
-      initialIndex: 0,
+      initialIndex: 0
       // nonUniSize: false,
-      // scrollBar: false,
       // accessibility: true,
       // adaptiveHeight: false,
       // setGallerySize: true,
@@ -1070,6 +1071,7 @@
     };
 
     proto.updateSlides = function() {
+      // این فانکشن برای هر کارت در صورتی که آن کارت در موقعیت ابتدای کاروسل قرار گرفته باشد آخرین ایندکسی که در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و سپس از این اطلاعات هم برای محاسبه آخرین ایندکس قابل انتخاب شدن در بین تمام کارتها استفاده می کند
       var len = this.cards.length;
       if (!this.options.nonUniSize) {
         var viewportSize = this.getViewportSizeForSameCards();
@@ -2507,7 +2509,10 @@
 
   ScrollHandle.prototype.activate = function() {
     this.handles = [this.scrollbarThumb];
-    this.bindHandles();
+
+    if (this.parent.options.scrollbarMutualControl) {
+      this.bindHandles();
+    }
     
     this.updateTrackSize();
     this.updateThumb();

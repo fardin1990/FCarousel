@@ -666,3 +666,42 @@ button {
 .nonUniSize-2 .card:nth-child(13) { width: 190px; }
 .nonUniSize-2 .card:nth-child(14) { width: 140px; }
 .nonUniSize-2 .card:nth-child(15) { width: 195px; }
+
+
+.one_card_in_front-wrapper {
+    overflow: hidden;
+}
+.one_card_in_front {
+    width: 650px;
+    margin: 0 auto;
+}
+.one_card_in_front .slider-cards-container {
+    overflow: visible;
+}
+.one_card_in_front .card {
+    /* width: 650px; */
+    width: 100%;
+    /* background-color: #ccc; */
+    background-color: #a5efa7;
+    opacity: 0.3;
+    transition: opacity 0.25s ease-out;
+}
+.one_card_in_front .card.is-selected {
+    opacity: 1;
+}
+
+.one_card_in_front .scroll-handle-Track {
+    background-color: #d7dcf5;
+    width: 250px;
+    height: 5px;
+    margin: 1rem auto 0.5rem;
+    border-radius: 3px;
+}
+.one_card_in_front .scroll-handle {
+    height: inherit; width: 25%;
+    background-color: #4379bd;
+    border-radius: 3px;
+    display: inline-block;
+    position: absolute;
+    /* min-width: 75px; */
+}
