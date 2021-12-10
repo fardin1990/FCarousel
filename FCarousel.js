@@ -715,6 +715,7 @@
     // this.element.setAttribute( 'aria-hidden', 'true' );
     this.x = 0;
     this.originalTarget = 0;
+    // this.lastIndexOfCardSlide = -1;
     this.shift = 0;
     
     // this.updateTarget();
@@ -753,6 +754,9 @@
     // return viewportStart - cardStartPosition;
     // return sliderStartPosition - cardStartPosition;
     return sliderStartPosition - cardStartPosition - this[startMargin];
+  };
+  proto.updateLastIndexOfCardSlide = function(index) {
+    this.lastIndexOfCardSlide = index;
   };
   proto.select = function() {
     this.element.classList.add('is-selected');
@@ -847,7 +851,8 @@
       contain: true,
       step: 1,
       initialIndex: 0,
-      // scrollBar: false
+      // nonUniSize: false,
+      // scrollBar: false,
       // accessibility: true,
       // adaptiveHeight: false,
       // setGallerySize: true,
@@ -911,7 +916,7 @@
       this.isActive = true;
 
       this.updateViewportWidth();
-      this.updateViewportSize();
+      // this.updateViewportSize();
       this.updateSliderWidth();
       this.positionCards();
       this.setGallerySize();
@@ -1021,8 +1026,14 @@
       }
     };
 
-    proto.updateViewportSize = function () {
-      // این فانکشن تعداد کارت هایی که در لحظه اجرا شدنش در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و از آن هم برای محاسبه آخرین ایندکس قابل انتخاب شدن استفاده می کند
+    // proto.updateViewportSize = function () {
+    //   // // این فانکشن تعداد کارت هایی که در لحظه اجرا شدنش در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و از آن هم برای محاسبه آخرین ایندکس قابل انتخاب شدن استفاده می کند
+
+    //   // this.slideCardsLength = this.getViewportSizeForSameCards();
+    //   // this.updateLastSelectableIndex();
+    // };
+    
+    proto.getViewportSizeForSameCards = function () {
       if (!this.cards.length) {
         return;
       }
@@ -1034,15 +1045,60 @@
           cardsDistance = Math.max(cardsDistance_ptp, cardsDistance_trgt),
           slideLength = Math.floor(this.viewportWidth / cardsDistance);
 
-      this.slideCardsLength = slideLength > 0 ? slideLength : 1;
-      this.updateLastSelectableIndex();
+      return slideLength > 0 ? slideLength : 1;
     };
+    
     proto.updateLastSelectableIndex = function () {
-      // این فانکشن با توجه به تعداد کارت هایی که در لحظه در کادر اسلایدر جا شده اند آخرین ایندکسی که
-      // امکان انتخاب (select) شدن را دارد به ما می دهد.
-      var lastIndex = this.cards.length - this.slideCardsLength;
-      lastIndex = lastIndex < 0 ? 0 : lastIndex;
+      // این فانکشن آخرین ایندکسی که امکان انتخاب (select) شدن را دارد به ما می دهد.
+      var lastIndex;
+      if (!this.options.nonUniSize) {
+        // lastIndex = this.cards.length - this.slideCardsLength;
+        lastIndex = this.cards.length - this.getViewportSizeForSameCards();
+        lastIndex = lastIndex < 0 ? 0 : lastIndex;
+      }
+      else {
+        var len = this.cards.length;
+        for(var i = 0; i < len; i++) {
+          var card = this.cards[i];
+          if (card.lastIndexOfCardSlide == len - 1) {
+            lastIndex = i;
+            break;
+          }
+        }
+      }
       this.lastIndex = lastIndex;
+    };
+
+    proto.updateSlides = function() {
+      var len = this.cards.length;
+      if (!this.options.nonUniSize) {
+        var viewportSize = this.getViewportSizeForSameCards();
+        for (var i = 0; i < len; i++) {
+          this.cards[i].updateLastIndexOfCardSlide(i + viewportSize - 1);
+        }
+      }
+      else {
+        for (var i = 0; i < len; i++) {
+          var lastIndexOfSlide = i,
+              startCard = this.cards[i],
+              cardElemsWidth = startCard.originalEndTarget - startCard.originalTarget;
+
+          if (i + 1 < len && cardElemsWidth <= this.viewportWidth) {
+            for (var j = i + 1; j < len; j++) {
+              cardElemsWidth = this.cards[j].originalEndTarget - startCard.originalTarget;
+              if (cardElemsWidth > this.viewportWidth) {
+                lastIndexOfSlide = j - 1;
+                break;
+              }
+              else if (j == len - 1) {
+                lastIndexOfSlide = j;
+              }
+            }
+          }
+          startCard.updateLastIndexOfCardSlide(lastIndexOfSlide);
+        }
+      }
+      this.updateLastSelectableIndex();
     };
     
     // -----  ----- //
@@ -1084,8 +1140,6 @@
     };
 
     proto.select = function (slideIndex, isWrap, isInstant) {
-      // var isCorrectIndex = slideIndex <= this.lastIndex,
-
       if (this.options.wrapAround || isWrap) {
         // slideIndex = utils.modulo(slideIndex, this.cards.length);
         slideIndex = utils.modulo(slideIndex, this.lastIndex + 1);
@@ -1119,13 +1173,25 @@
       }
     };
     proto.prev = function (isWrap, isInstant) {
-      var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
-          index = -step + this.selectedIndex;
+      // var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
+      //     index = -step + this.selectedIndex;
+      
+      var slctdIndx = this.selectedIndex;
+      var step = +this.options.step || 
+                 (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx, true) : 1);
+      var index = slctdIndx - step;
+
       this.select(index, isWrap, isInstant);
     };
     proto.next = function (isWrap, isInstant) {
-      var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
-          index = step + this.selectedIndex;
+      // var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
+      //     index = step + this.selectedIndex;
+
+      var slctdIndx = this.selectedIndex;
+      var step = +this.options.step || 
+                 (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx) : 1);
+      var index = slctdIndx + step;
+
       this.select(index, isWrap, isInstant);
     };
     proto.updateSelectedCard = function () {
@@ -1140,11 +1206,7 @@
       card.select();
     };
     proto.updateInViewportCards = function() {
-      // fardin TODO
-      // برای استاتیک اسلاید دار ها این متد باز نویسی (اور رایت) شود
-      // و همچنین تنظیمات wrapAround هم برای این متد انجام گیرد
-
-      cardElems = [];
+      var cardElems = [];
       // if (this.isPointerDown || this.isFreeScrolling) {
       //   // ....
       //   // this.inViewportCards = cardElems;
@@ -1166,6 +1228,22 @@
         }
       }
       this.inViewportCards = cardElems;
+    };
+    proto.getCurrentOrPreviousSlideCardsLength = function(index, isPreviousPageSlide) {      
+      // get length of cards for which slide that 
+      // starts with 'card[index]' or slide which ends by 'card[index - 1]'
+      if (isPreviousPageSlide) {
+        var len = this.cards.length;
+        for (var i = 0; i < len; i++) {
+          var card = this.cards[i];
+          if (card.lastIndexOfCardSlide >= index) {
+            return index - i + 1;
+          }
+        }
+      }
+      else {
+        return this.cards[index].lastIndexOfCardSlide - index + 1;
+      }
     };
     proto.unselectSelectedCard = function() {
       if ( this.selectedCard ) {
@@ -1281,14 +1359,20 @@
       }
 
       var cardElems = [];
-      var startIndex = Math.max(index - adjCount, 0),
-          endIndex = Math.min(index + iVpCLen + adjCount - 1, cLen- 1);
+
+      if (this.staticSlides) {
+        var staticSlide = this.staticSlides[index];
+        index = this.cards.indexOf(staticSlide.cards[0]);
+      }
+      
+      var startIndex = index - adjCount,
+          endIndex = index + iVpCLen - 1 + adjCount;
+      startIndex = this.options.wrapAround ? utils.modulo(startIndex, cLen) : Math.max(startIndex, 0);
+      endIndex = this.options.wrapAround ? utils.modulo(endIndex, cLen) : Math.min(endIndex, cLen- 1);
+
       for ( var i = startIndex; i <= endIndex; i++ ) {
-        var cardIndex = this.options.wrapAround ? utils.modulo( i, len ) : i;
-        var card = this.cards[cardIndex];
-        // if ( card ) {
-          cardElems = cardElems.concat(card.element);
-        // }
+        var card = this.cards[i];
+        cardElems = cardElems.concat(card.element);
       }
       return cardElems;
     };
@@ -1327,7 +1411,7 @@
       // this.selectCard( selectedElement, false, true );
 
       this.updateViewportWidth();
-      this.updateViewportSize();
+      // this.updateViewportSize();
       this.updateSliderWidth();
       this.positionCards();
       this.setGallerySize();
@@ -1386,6 +1470,10 @@
 
         this.maxCardHeight = Math.max( card.height, this.maxCardHeight );
       }
+      
+      // if (this.options.nonUniSize) {
+        this.updateSlides();
+      // }
 
       // contain slides target
       this._containSlides();
@@ -2954,30 +3042,13 @@
       return;
     }
     
-    // navSelectedIndex: selectedIndex of this carousel (navigation carousel)
-    // var navSelectedIndex = companion.selectedIndex < this.lastIndex ? companion.selectedIndex : this.lastIndex;
     var navSelectedIndex = companion.selectedIndex;
-
     var formerSlideFirstIndex = this.slideFirstIndex >= 0 ? this.slideFirstIndex : navSelectedIndex;
-    var formerSlideLastIndex = this.slideLastIndex >= 0 ? this.slideLastIndex
-    : (navSelectedIndex + this.slideCardsLength <= this.cards.length ? navSelectedIndex + this.slideCardsLength - 1 : this.cards.length - 1);
 
     this.updateSlideBounds();
 
-    // var sI = companion.selectedIndex < this.lastIndex ? companion.selectedIndex : this.lastIndex;
-    // // select slide that matches first card of slide
-    // var slideFirstIndex = sI < this.lastIndex ? companion.selectedIndex : this.lastIndex;
-    // // var slideLastIndex = slideFirstIndex + companion.slideCardsLength - 1;
-    // var slideLastIndex = slideFirstIndex + this.slideCardsLength - 1;
-    // var navSelectedIndex = companion.selectedIndex;
-
-    // this.slideFirstIndex = slideFirstIndex;
-    // this.slideLastIndex = slideLastIndex;
-    
-
-    // if (navSelectedIndex < slideFirstIndex || navSelectedIndex > slideLastIndex) {
-    // if (navSelectedIndex < formerSlideFirstIndex || navSelectedIndex > formerSlideLastIndex) {
-    if (this.slideFirstIndex != formerSlideFirstIndex || navSelectedIndex < this.selectedIndex || navSelectedIndex > this.selectedIndex + this.slideCardsLength - 1) {
+    // if (this.slideFirstIndex != formerSlideFirstIndex || navSelectedIndex < this.selectedIndex || navSelectedIndex > this.selectedIndex + this.slideCardsLength - 1) {
+    if (this.slideFirstIndex != formerSlideFirstIndex || navSelectedIndex < this.selectedIndex || navSelectedIndex > this.cards[this.selectedIndex].lastIndexOfCardSlide) {
       this.selectCard( this.slideFirstIndex, false, isInstant );
     }
     // set nav selected class
@@ -2995,14 +3066,16 @@
   proto.updateSlideBounds = function() {
     // sI : selectedIndex of main carousel for use in this carousel (navigation carousel)
     var sI = this.navCompanion.selectedIndex < this.cards.length ? this.navCompanion.selectedIndex : this.cards.length - 1;
+    // slCardsLength : length of slide which starts with selected-card
+    var slCardsLength = this.getCurrentOrPreviousSlideCardsLength(this.selectedIndex);
     
     if (!(this.slideFirstIndex >= 0)) {
       this.slideFirstIndex = sI;
-      this.slideLastIndex = sI + this.slideCardsLength <= this.cards.length ? sI + this.slideCardsLength - 1 : this.cards.length - 1;
+      this.slideLastIndex = sI + slCardsLength <= this.cards.length ? sI + slCardsLength - 1 : this.cards.length - 1;
     }
-    else if (sI >= this.selectedIndex && sI <= this.selectedIndex + this.slideCardsLength - 1) {
+    else if (sI >= this.selectedIndex && sI <= this.selectedIndex + slCardsLength - 1) {
       this.slideFirstIndex = this.selectedIndex;
-      this.slideLastIndex = this.selectedIndex + this.slideCardsLength <= this.cards.length ? this.selectedIndex + this.slideCardsLength - 1 : this.cards.length - 1;
+      this.slideLastIndex = this.selectedIndex + slCardsLength <= this.cards.length ? this.selectedIndex + slCardsLength - 1 : this.cards.length - 1;
     }
     else {
       if (sI >= this.slideFirstIndex && sI <= this.slideLastIndex) {
@@ -3010,10 +3083,10 @@
       }
       else if (sI < this.slideFirstIndex) {
         this.slideFirstIndex = sI;
-        this.slideLastIndex = sI + this.slideCardsLength <= this.cards.length ? sI + this.slideCardsLength - 1 : this.cards.length - 1;
+        this.slideLastIndex = sI + slCardsLength <= this.cards.length ? slCardsLength - 1 : this.cards.length - 1;
       }
       else if (sI > this.slideLastIndex) {
-        this.slideFirstIndex = sI - this.slideCardsLength + 1;
+        this.slideFirstIndex = sI - slCardsLength + 1;
         this.slideLastIndex = sI;
       }
     }
@@ -3246,7 +3319,7 @@
     }
 
     // fardin TODO :
-    // این متد در حال حاضر بعد از ریساز شدن صفحه ایندکس انتخاب شده جدید را بر مبنای 
+    // این متد در حال حاضر بعد از ریسایز شدن صفحه ایندکس انتخاب شده جدید را بر مبنای 
     // شماره اولین کارت اسلاید انتخاب شده قبلی بدست می آورد ولی شاید بهتر باشد که بر مبنای 
     // این باشد که اسلاید انتخاب شده جدید آن اسلایدی باشد که از اسلایدهای دیگر
     // تعداد کارتهای مشترک بیشتری با اسلاید انتخاب شده قدیمی داشته باشد
@@ -3284,6 +3357,22 @@
     // selectedStaticSlide
     // استفاده نکرده اند، نیاز داریم، در واقع این کار باعث می شود در بعضی متد ها که به 
     // تارگت المان سلکت شده نیاز است می توان جایگزین بازنویسی یا تغییر آن متد شود
+  };
+    
+  var updateInViewportCards = proto.updateInViewportCards;
+  proto.updateInViewportCards = function() {
+    if ( !this.options.fade ) {
+      updateInViewportCards.apply( this, arguments );
+      return;
+    }
+
+    // if (this.isPointerDown || this.isFreeScrolling) {
+    //   // cardElems = [];
+    //   // ....
+    //   // this.inViewportCards = cardElems;
+    //   // return;
+    // }
+    this.inViewportCards = this.selectedCards;
   };
 
   proto.unselectSelectedStaticSlide = function() {
