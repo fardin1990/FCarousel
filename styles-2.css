@@ -331,13 +331,13 @@ button {
 .f-carousel .f-carousel-control-prev {
     right: 0;
     padding-right: 5px;
-    border-radius: 2px 0 0 2px;
+    border-radius: 0 3px 3px 0;
 }
 .slider-cards-list .f-carousel-control-next,
 .f-carousel .f-carousel-control-next {
     left: 0;
     padding-right: 7px;
-    border-radius: 0 2px 2px 0;
+    border-radius: 3px 0 0 3px;
 }
 .slider-cards-list .f-carousel-control:focus,
 .slider-cards-list .f-carousel-control:hover,
@@ -620,6 +620,14 @@ button {
 } */
 
 
+.card {
+    z-index: 0;
+}
+.card.is-selected {
+    z-index: 1;
+}
+
+
 .nonUniSize-1 img,
 .nonUniSize-2 img {
     max-width: 100%;
@@ -712,4 +720,19 @@ button {
 .f-carousel.cards-with-margin .card {
     /* margin: 0 10px 0 6px; */
     margin: 0 25px 0 6px;
+}
+
+
+
+.ltr .slider-cards-list .f-carousel-control-prev,
+.ltr .f-carousel .f-carousel-control-prev {
+    right: auto;
+    left: 0;
+    border-radius: 3px 0 0 3px;
+}
+.ltr .slider-cards-list .f-carousel-control-next,
+.ltr .f-carousel .f-carousel-control-next {
+    left: auto;
+    right: 0;
+    border-radius: 0 3px 3px 0;
 }

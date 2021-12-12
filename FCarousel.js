@@ -756,7 +756,7 @@
         cardStartPosition = getPosition(this.element, isRightToLeft).start,
         startMargin = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
 
-    return sliderStartPosition - (cardStartPosition + this[startMargin]);
+    return Math.abs(sliderStartPosition - (cardStartPosition + this[startMargin]));
   };
   proto.updateLastIndexOfCardSlide = function(index) {
     this.lastIndexOfCardSlide = index;
@@ -2344,10 +2344,24 @@
   proto._getClosestResting = function( restingX, distance, increment ) {
     var index = this.selectedIndex;
     var minDistance = Infinity;
+
+    // // if contain, keep going if distance is equal to minDistance
     // var condition = this.options.contain && !this.options.wrapAround ?
-    //   // if contain, keep going if distance is equal to minDistance
     //   function( d, md ) { return d <= md; } : function( d, md ) { return d < md; };
-    var condition = function( d, md ) { return d < md; };
+    
+    /**************************************/
+    // در شرایط ایجاد شرط زیر ممکن است تارگت دو کارت پشت سر هم یکی باشند
+    // و فاصله هر دوی آنها از هر مقصدی به یک اندازه می شود که در این حالت ما نمی خواهیم
+    // از حلقه ی پایین خارج شویم تا زمانی که واقعا به کارتی برسیم که فاصله کمتری 
+    // تا مقصد داشته باشد و یا اصلا کارتی را به عنوان کارت نزدیکتر بهمان بر نگرداند
+    /**************************************/
+    // در شرط پایین زمانی تارگت دو کارت برابر می شود که مثلا دو کارت کنار هم 
+    // عرض خیلی کمتری از کارتهای دیگر داشته باشند
+    /**************************************/
+    var condition = this.options.nonUniSize && this.cardAlign == 1 ?
+      function( d, md ) { return d <= md; } : function( d, md ) { return d < md; };
+    /**************************************/
+
     while ( condition( distance, minDistance ) ) {
       // measure distance to next card
       index += increment;
