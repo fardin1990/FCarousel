@@ -617,36 +617,31 @@
     if (!companion) {
       return;
     }
-    // var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].originalTarget,
-    //     IsLessThanOriginBound = -this.x < this.cards[0].originalTarget,
     var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].target,
         IsLessThanOriginBound = -this.x < this.cards[0].target,
         acquiredWidth;
     if ( IsGreaterThanEndBound || IsLessThanOriginBound ) {
-      // cISCSWidth: calculated Instantaneous size of carousel sliding width
-      // var cISCSWidth = this.cards[this.lastIndex].originalTarget - this.cards[0].originalTarget,
-      var cISCSWidth = this.cards[this.lastIndex].target - this.cards[0].target,
-          cVWidth = this.viewportWidth;         // carousel viewport width
+      var cSWidth = this.cards[this.lastIndex].target - this.cards[0].target, // cSWidth: carousel sliding width
+          slidingWidthChangeAmount;
 
       if ( IsGreaterThanEndBound ) {
-        // cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].originalTarget);
-        cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].target);
+        slidingWidthChangeAmount = Math.abs(-this.x - this.cards[this.lastIndex].target);
       }
       else if ( IsLessThanOriginBound ) {
-        // cISCSWidth += Math.abs(-this.x - this.cards[0].originalTarget);
-        cISCSWidth += Math.abs(-this.x - this.cards[0].target);
+        slidingWidthChangeAmount = Math.abs(-this.x - this.cards[0].target);
       }
       
-      acquiredWidth = companion.trackWidth * cVWidth / cISCSWidth;
+      // acquiredWidth = companion.trackWidth * cVpWidth / iCSWidth;
+      acquiredWidth = (cSWidth / (slidingWidthChangeAmount + cSWidth)) * companion.thumbWidth;
       this.scrollbar.setThumbWidth(acquiredWidth, true);
     } 
     else {
       this.scrollbar.setThumbWidth(companion.thumbWidth);
     }
 
-    var thmbW = acquiredWidth || companion.thumbWidth;
+    var thmbWdth = acquiredWidth || companion.thumbWidth;
     if ( IsGreaterThanEndBound ) {
-      companion.acquiredPositionX = companion.trackWidth - Math.round(thmbW);
+      companion.acquiredPositionX = companion.trackWidth - Math.round(thmbWdth);
     }
     else if ( IsLessThanOriginBound ) {
       companion.acquiredPositionX = 0;
@@ -2547,8 +2542,8 @@
     this.trackWidth = this.scrollbarTrack.clientWidth;
   };
   ScrollHandle.prototype.updateThumb = function () {
-    var thumbWidth = this.calculateThumbWidth();
-    this.setThumbWidth(thumbWidth);
+    var thmbWdth = this.calculateThumbWidth();
+    this.setThumbWidth(thmbWdth);
   };
   ScrollHandle.prototype.calculateThumbWidth = function () {
     var parent = this.parent,
@@ -2556,19 +2551,20 @@
         // cSWidth = parent.slideableWidth,                        // carousel slider width
         // cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
         cSWidth = cards[parent.lastIndex].target - cards[0].target,  // carousel sliding width
-        cVWidth = parent.viewportWidth;                            // carousel viewport width
-    // return (this.trackWidth * (cSWidth - cVWidth) / cSWidth)
-    return (this.trackWidth * cVWidth / cSWidth)
+        cVpWidth = parent.viewportWidth;                            // carousel viewport width
+    return (this.trackWidth * cVpWidth / cSWidth)
   };
-  ScrollHandle.prototype.setThumbWidth = function (thumbWidth, isImpermanent) {
+  ScrollHandle.prototype.setThumbWidth = function (thmbWdth, isImpermanent) {
     var minThumbWidth = +this.parent.options.minScrollThumbWidth || 20;
-    thumbWidth = Math.max(minThumbWidth, thumbWidth);
-    thumbWidth = Math.min(this.trackWidth, thumbWidth);
-    thumbWidth = Math.round(thumbWidth);
+    thmbWdth = isImpermanent ? thmbWdth : Math.max(minThumbWidth, thmbWdth);
+    thmbWdth = Math.min(this.trackWidth, thmbWdth);
+    thmbWdth = Math.round(thmbWdth);
+    
     if (!isImpermanent) {
-      this.thumbWidth = thumbWidth;
+      this.thumbWidth = thmbWdth;
     }
-    this.scrollbarThumb.style.width = thumbWidth + "px";
+    // this.thumbStyleWidth = thmbWdth;
+    this.scrollbarThumb.style.width = thmbWdth + "px";
   };
   ScrollHandle.prototype.updatecompanionConversionFactor = function () {
     var cards = this.parent.cards,
