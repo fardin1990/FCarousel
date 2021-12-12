@@ -698,10 +698,18 @@ button {
     border-radius: 3px;
 }
 .one_card_in_front .scroll-handle {
-    height: inherit; width: 25%;
+    height: inherit;
+    width: 25%;
     background-color: #4379bd;
     border-radius: 3px;
     display: inline-block;
     position: absolute;
     /* min-width: 75px; */
+}
+
+
+
+.f-carousel.cards-with-margin .card {
+    /* margin: 0 10px 0 6px; */
+    margin: 0 25px 0 6px;
 }

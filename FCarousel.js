@@ -375,7 +375,7 @@
 
 
 
-// global drag animate
+// global drag animate (for Carousel & Scrollbar handle)
 (function (window, factory) {
   window.dragAnimatePrototype = factory();
 })(window, function () {
@@ -396,7 +396,6 @@
     this.animate();
   };
   proto.animate = function () {
-
     if (this.positioningCompanion && this.positioningCompanion.isAnimatingDirectly) {
       // this.isAnimating = false;
       this.isAnimatingDirectly = false;
@@ -408,10 +407,8 @@
     this.applyDragForce();
     var previousX = this.x;
     this.integratePhysics();
-
     this.positionSlider();
 
-    this.setCompanionAcquiredPosition();
     this.animateCompanion();
 
     this.settle(previousX);
@@ -439,6 +436,12 @@
       this.checkVelocityValidity();
     }
     this.x += this.velocity;
+
+    var companion = this.positioningCompanion;
+    if (companion) {
+      companion.acquiredPositionX = companion.x + -this.velocity * companion.companionConversionFactor;
+    }
+    
     // if (!this.isPointerDown) {
       this.velocity *= this.getFrictionFactor();
     // }
@@ -467,11 +470,13 @@
     var x = this.x;
     this.setTranslateX(x, this.isAnimating);
     
-    var _this = this.isScrollbar ? this.parent : this;
+    // var _this = this.isScrollbar ? this.parent : this;
     // _this.dispatchScrollEvent();
   };
   proto.setTranslateX = function (x, is3d) {
-    // x += this.cursorPosition;
+    if (this.cursorPosition) {
+      x += this.cursorPosition;
+    }
     // reverse if right-to-left and using transform
     x = this.options.rightToLeft ? -x : x;
     var translateX = Math.round(x);
@@ -485,22 +490,14 @@
   // proto.dispatchScrollEvent = function() {
   //   var _this = this.isScrollbar ? this.parent : this;
   //   var firstCard = _this.cards[0];
-  //   if ( !firstCard || _this.cards[_this.lastIndex].originalTarget == 0 ) {
+  //   if ( !firstCard || _this.cards[_this.lastIndex].target - firstCard.target == 0 ) {
   //     return;
   //   }
-  //   var positionX = -_this.x - firstCard.originalTarget;
-  //   var progress = positionX / _this.cards[_this.lastIndex].originalTarget - firstCard.originalTarget;
+  //   var positionX = -_this.x - firstCard.target;
+  //   var progress = positionX / (_this.cards[_this.lastIndex].target - firstCard.target);
   //   this.dispatchEvent( 'scroll', null, [ progress, positionX ] );
   // };
 
-  proto.setCompanionAcquiredPosition = function () {
-    var companion = this.positioningCompanion;
-    // if (!companion || companion.isAnimatingDirectly) {
-    if (!companion) {
-      return;
-    }
-    companion.acquiredPositionX = -this.x * companion.companionConversionFactor;
-  };
   proto.animateCompanion = function () {
     var companion = this.positioningCompanion;
     // if (!companion || companion.isAnimatingDirectly) {
@@ -536,12 +533,13 @@
       // render position with translateX when settled
       this.positionSlider();
       
-      if (this.positioningCompanion) {
-        this.positioningCompanion.isAnimating = false;
-        this.positioningCompanion.isAnimatingDirectly = false;
-        delete this.positioningCompanion.isFreeScrolling;
-        delete this.positioningCompanion.lastVelocity;
-        this.positioningCompanion.positionSlider();
+      var companion = this.positioningCompanion;
+      if (companion) {
+        companion.isAnimating = false;
+        companion.isAnimatingDirectly = false;
+        delete companion.isFreeScrolling;
+        delete companion.lastVelocity;
+        companion.positionSlider();
       }
 
       this.dispatchEvent( 'settle', null, [ this.selectedIndex ] );
@@ -580,7 +578,6 @@
     
     this.positionSlider();
 
-    this.setCompanionAcquiredPosition();
     this.setQualifiedPhysicsForScrollbarThumb();
     this.animateCompanion();
 
@@ -605,16 +602,10 @@
     if (dragDown || this.isFreeScrolling || !this.cards.length) {
       return;
     }
-    var distance = this.selectedCard.originalTarget * -1 - this.x;
+    // var distance = this.selectedCard.originalTarget * -1 - this.x;
+    var distance = this.selectedCard.target * -1 - this.x;
     var force = distance * this.options.selectedAttraction;
     this.applyForce(force);
-  };
-  proto.integratePhysics = function () {
-    if (this.isAnimatingDirectly) {
-      this.checkVelocityValidity();
-    }
-    this.x += this.velocity;
-    this.velocity *= this.getFrictionFactor();
   };
   proto.getFrictionFactor = function () {
     return (
@@ -626,19 +617,24 @@
     if (!companion) {
       return;
     }
-    var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].originalTarget,
-        IsLessThanOriginBound = -this.x < this.cards[0].originalTarget,
+    // var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].originalTarget,
+    //     IsLessThanOriginBound = -this.x < this.cards[0].originalTarget,
+    var IsGreaterThanEndBound = -this.x > this.cards[this.lastIndex].target,
+        IsLessThanOriginBound = -this.x < this.cards[0].target,
         acquiredWidth;
     if ( IsGreaterThanEndBound || IsLessThanOriginBound ) {
       // cISCSWidth: calculated Instantaneous size of carousel sliding width
-      var cISCSWidth = this.cards[this.lastIndex].originalTarget - this.cards[0].originalTarget,
+      // var cISCSWidth = this.cards[this.lastIndex].originalTarget - this.cards[0].originalTarget,
+      var cISCSWidth = this.cards[this.lastIndex].target - this.cards[0].target,
           cVWidth = this.viewportWidth;         // carousel viewport width
 
       if ( IsGreaterThanEndBound ) {
-        cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].originalTarget);
+        // cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].originalTarget);
+        cISCSWidth += Math.abs(-this.x - this.cards[this.lastIndex].target);
       }
       else if ( IsLessThanOriginBound ) {
-        cISCSWidth += Math.abs(-this.x - this.cards[0].originalTarget);
+        // cISCSWidth += Math.abs(-this.x - this.cards[0].originalTarget);
+        cISCSWidth += Math.abs(-this.x - this.cards[0].target);
       }
       
       acquiredWidth = companion.trackWidth * cVWidth / cISCSWidth;
@@ -673,15 +669,18 @@
     if ( !this.cards.length ) {
       return;
     }
-    this.x = -this.selectedCard.originalTarget;
+    // this.x = -this.selectedCard.originalTarget;
+    this.x = -this.selectedCard.target;
     this.velocity = 0; // stop wobble
     delete this.lastVelocity;
     this.positionSlider();
   
     var companion = this.positioningCompanion;
     if (companion) {
-      this.setCompanionAcquiredPosition();
-      companion.x = companion.acquiredPositionX;
+      var originalX = -this.selectedCard.originalTarget;
+      // companion.acquiredPositionX = -this.x * companion.companionConversionFactor;
+      // companion.x = -this.x * companion.companionConversionFactor;
+      companion.x = -originalX * companion.companionConversionFactor;
       companion.velocity = 0;
       delete companion.lastVelocity;
       companion.positionSlider()
@@ -730,33 +729,39 @@
     // this.originalEndTarget = x + this.width || this.getOuterWidth(this.element) - this[endMargin] || this.element.style[endMargin];
     this.originalEndTarget = x + this.width - this[endMargin];
     
-    this.updateTarget();
+    // this.updateTarget();
     this.renderPosition(x);
   };
 
   proto.updateTarget = function () {
-    // this.originalTarget = this.getDistanceFromStart();
-    this.target = this.getDistanceFromStart();
+    var marginProperty = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
+    // this.target = this.originalTarget + this[marginProperty] + this.width * this.parent.cardAlign;
+    
+    if (this.parent.wrapAround) {
+      // 
+    }
+    else {
+      // this.target = this.originalTarget + this[marginProperty] + 
+      //               (this.parent.cards[this.lastIndexOfCardSlide].originalEndTarget 
+      //               - this.originalTarget) * this.parent.cardAlign;
+      this.target = this.originalTarget + 
+                    (this.parent.cards[this.lastIndexOfCardSlide].originalEndTarget 
+                    - this.originalTarget) * this.parent.cardAlign;
+    }
   };
   proto.getDistanceFromStart = function () {
     var parent = this.parent,
         isRightToLeft = parent.options.rightToLeft,
-        // viewportStartPosition = getPosition(parent.viewport, isRightToLeft).start,
         sliderStartPosition = getPosition(parent.slider, isRightToLeft).start,
         cardStartPosition = getPosition(this.element, isRightToLeft).start,
-        // startMargin = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
-        startMargin = isRightToLeft ? 'marginRight' : 'marginLeft';
+        startMargin = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
 
-    // نکته : با روشی که اینجا اجرا می کنیم مارجین استارت هر دو المان کلیدی (کارت و اسلایدر) را
-    // در نظر نگرفتیم؛ پس در صورتی که در آینده متوجه شویم که  باید مارجین استارت هر کارتی را
-    // هم در نظر بگیریم می توانیم آن مارجین را از خروجی این متد کم کنیم.اا
-
-    // return viewportStart - cardStartPosition;
-    // return sliderStartPosition - cardStartPosition;
-    return sliderStartPosition - cardStartPosition - this[startMargin];
+    return sliderStartPosition - (cardStartPosition + this[startMargin]);
   };
   proto.updateLastIndexOfCardSlide = function(index) {
     this.lastIndexOfCardSlide = index;
+    
+    this.updateTarget();
   };
   proto.select = function() {
     this.element.classList.add('is-selected');
@@ -917,11 +922,10 @@
       this.isActive = true;
 
       this.updateViewportWidth();
-      // this.updateViewportSize();
+      this.setCardAlign();
       this.updateSliderWidth();
       this.positionCards();
       this.setGallerySize();
-      this.setCardAlign();
 
       this.element.tabIndex = 0;
       if (this.options.accessibility) {
@@ -968,6 +972,7 @@
     proto.setCardAlign = function() {
       var shorthand = cardAlignShorthands[this.options.cardAlign];
       this.cardAlign = shorthand[this.originSide];
+      this.cursorPosition = this.viewportWidth * this.cardAlign;
     };
     proto.setGallerySize = function() {
       if ( this.options.setGallerySize || this.options.fade ) {
@@ -1011,28 +1016,22 @@
       if ( !this.options.contain || this.options.wrapAround || !this.cards.length || this.options.fade ) {
         return;
       }
-      var isRtl = this.options.rightToLeft;
-      // var beginMargin = isRtl ? 'marginRight' : 'marginLeft';
-      var endMargin = isRtl ? 'marginLeft' : 'marginRight';
-      var lastCardElem = this.getLastCard().element,
-          lastCardEndMargin = this.getSize( lastCardElem )[ endMargin ];
-      // var contentWidth = this.slideableWidth - this.getLastCard().size[ endMargin ];
-      var contentWidth = this.slideableWidth - lastCardEndMargin;
-      // content is less than gallery size
-      var isContentSmaller = contentWidth < this.viewportWidth;
+      var isRtl = this.options.rightToLeft,
+          beginMargin = isRtl ? 'marginRight' : 'marginLeft',
+          endMargin = isRtl ? 'marginLeft' : 'marginRight',
+          firstCardStartMargin = this.cards[0][beginMargin],
+          lastCardEndMargin = this.cards[this.cards.length - 1][endMargin],
+          contentWidth = this.slideableWidth - lastCardEndMargin,
+          isContentSmaller = contentWidth < this.viewportWidth;
 
       if (!isContentSmaller) {
-        var lastSelectableCard = this.getLastSelectableCard();
-        lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
+        // content is less than gallery size
+        var lastSelectableCard = this.cards[this.lastIndex];
+        // lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
+        lastSelectableCard.target = contentWidth - this.viewportWidth + this.cursorPosition;
+        this.cards[0].target = this.cursorPosition + firstCardStartMargin;
       }
     };
-
-    // proto.updateViewportSize = function () {
-    //   // // این فانکشن تعداد کارت هایی که در لحظه اجرا شدنش در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و از آن هم برای محاسبه آخرین ایندکس قابل انتخاب شدن استفاده می کند
-
-    //   // this.slideCardsLength = this.getViewportSizeForSameCards();
-    //   // this.updateLastSelectableIndex();
-    // };
     
     proto.getViewportSizeForSameCards = function () {
       if (!this.cards.length) {
@@ -1074,9 +1073,11 @@
       // این فانکشن برای هر کارت در صورتی که آن کارت در موقعیت ابتدای کاروسل قرار گرفته باشد آخرین ایندکسی که در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و سپس از این اطلاعات هم برای محاسبه آخرین ایندکس قابل انتخاب شدن در بین تمام کارتها استفاده می کند
       var len = this.cards.length;
       if (!this.options.nonUniSize) {
+        // در این حالت تعداد کارت هایی که در کادر اسلایدر به طور کامل جا می شوند را  بر اساس فاصله دو کارت اول کاروسل محاسبه می کند
         var viewportSize = this.getViewportSizeForSameCards();
         for (var i = 0; i < len; i++) {
-          this.cards[i].updateLastIndexOfCardSlide(i + viewportSize - 1);
+          var index = Math.min(i + viewportSize - 1, len - 1)
+          this.cards[i].updateLastIndexOfCardSlide(index);
         }
       }
       else {
@@ -1130,11 +1131,6 @@
     };
 
     proto.getIndexInRange = function (index) {
-      // index = parseInt(+index) ? parseInt(+index) : 0;
-      // index = index > this.lastIndex ? this.lastIndex : index;
-      // index = index < 0 ? 0 : index;
-      // return index;
-      
       index = parseInt(+index) || 0;
       index = Math.min(this.lastIndex, index);
       index = Math.max(0, index);
@@ -1251,12 +1247,6 @@
       if ( this.selectedCard ) {
         this.selectedCard.unselect();
       }
-    };
-    proto.getLastSelectableCard = function() {
-      return this.cards[this.lastIndex];
-    };
-    proto.getLastCard = function() {
-      return this.cards[ this.cards.length - 1 ];
     };
     proto.selectInitialIndex = function() {
       var initialIndex = this.options.initialIndex;
@@ -1396,30 +1386,23 @@
       if ( !this.isActive ) {
         return;
       }
-      // if (this.options.fade) debugger;
-      
-      // this.getSize();
+      this.updateViewportWidth();
+      this.cursorPosition = this.viewportWidth * this.cardAlign;
+      this.updateSliderWidth();
       // wrap values
       // if ( this.options.wrapAround ) {
       //   this.x = utils.modulo( this.x, this.slideableWidth );
       // }
-      // this.positionCards();
-      // this._getWrapShiftCards();
-      // this.setGallerySize();
-      // this.emitEvent('resize');
-      // // update selected index for group slides, instant
-      // // TODO: position can be lost between groups of various numbers
-      // var selectedElement = this.selectedElements && this.selectedElements[0];
-      // this.selectCard( selectedElement, false, true );
-
-      this.updateViewportWidth();
-      // this.updateViewportSize();
-      this.updateSliderWidth();
       this.positionCards();
+      // this._getWrapShiftCards();
       this.setGallerySize();
 
       this.emitEvent('resize');
       
+      // // update selected index for group slides, instant
+      // // TODO: position can be lost between groups of various numbers
+      // var selectedElement = this.selectedElements && this.selectedElements[0];
+      // this.selectCard( selectedElement, false, true );
       this.select(this.selectedIndex, false, true);
     };
     
@@ -1451,12 +1434,12 @@
       // get startCardX
       if ( index > 0 ) {
         // محاسبه تارگت کارت شروع (در صورتی که این کارت اولین کارت اسلایدر نباشد) بر
-        // مبنای تارگت کارت قبلی خود و مشخصات خودش (همین کارت)
+        // مبنای تارگت کارت قبلی خود و یا بر مبنای موقعیت خودش (در صورتی که همه ی کارتها به ترتیب
+        // در موقعیت پشت سر هم قرار گرفته باشند)
         var card = this.cards[index],
             startCard = this.cards[index - 1],  // the 'startCard' here is actually the prior card
             cardX_exact = startCard.originalTarget + startCard.width,
-            // cardX_pointToPoint = startCard.originalTarget + card.target - startCard.target;
-            cardX_pointToPoint = card.target || card.getDistanceFromStart();
+            cardX_pointToPoint = card.getDistanceFromStart();
           cardX = this.options.fade ? cardX_exact : cardX_pointToPoint;
       }
 
@@ -1465,6 +1448,7 @@
         var card = this.cards[i],
             nextCard = this.cards[i + 1],
             nextCardDistance;
+            
         card.setPosition(cardX);
 
         nextCardDistance = nextCard ? nextCard.getDistanceFromStart() - card.originalTarget : 0;
@@ -2252,16 +2236,9 @@
 
   // -------------------------- dragging -------------------------- //
 
-  proto.companionDragStart = function() {
-    var companion = this.positioningCompanion;
-    this.x = -companion.x * this.companionConversionFactor;
-    this.acquiredPositionX = this.x;
-  };
-
   proto.companionDragEnd = function() {
     this.dragEnd();
   };
-  
 
   proto.dragStart = function( event, pointer ) {
     if ( !this.isDraggable ) {
@@ -2269,9 +2246,6 @@
     }
     this.dragStartPosition = this.x;
     
-    if (this.positioningCompanion) {
-      this.positioningCompanion.companionDragStart();
-    }
     this.startAnimation();
     window.removeEventListener( 'scroll', this );
     // this.dispatchEvent( 'dragStart', event, [ pointer ] );
@@ -2300,9 +2274,11 @@
 
     if ( !this.options.wrapAround && this.cards.length ) {
       // slow drag
-      var originBound = Math.max( -this.cards[0].originalTarget, this.dragStartPosition );
+      // var originBound = Math.max( -this.cards[0].originalTarget, this.dragStartPosition );
+      var originBound = Math.max(-this.cards[0].target, this.dragStartPosition);
       dragX = dragX > originBound ? ( dragX + originBound ) * 0.5 : dragX;
-      var endBound = Math.min( -this.getLastSelectableCard().originalTarget, this.dragStartPosition );
+      // var endBound = Math.min( -this.getLastSelectableCard().originalTarget, this.dragStartPosition );
+      var endBound = Math.min( -this.cards[this.lastIndex].target, this.dragStartPosition );
       dragX = dragX < endBound ? ( dragX + endBound ) * 0.5 : dragX;
     }
 
@@ -2327,8 +2303,8 @@
       // do not free-scroll if going outside of bounding slides
       // so bounding slides can attract slider, and keep it in bounds
       var restingX = this.getRestingPosition();
-      this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.getLastSelectableCard().originalTarget;
-      // this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.cards[this.lastIndex].originalTarget;
+      // this.isFreeScrolling = -restingX > this.cards[0].originalTarget && -restingX < this.getLastSelectableCard().originalTarget;
+      this.isFreeScrolling = -restingX > this.cards[0].target && -restingX < this.cards[this.lastIndex].target;
     }
     else if ( !this.options.freeScroll && index == this.selectedIndex ) {
       // boost selection if selected index has not changed
@@ -2407,7 +2383,8 @@
     }
     // add distance for wrap-around slides
     var wrap = isWrapAround ? this.slideableWidth * Math.floor( index / len ) : 0;
-    return x - ( card.originalTarget + wrap );
+    // return x - ( card.originalTarget + wrap );
+    return x - ( card.target + wrap );
   };
 
   proto.dragEndBoostSelect = function() {
@@ -2563,15 +2540,16 @@
     var parent = this.parent,
         cards = parent.cards,
         // cSWidth = parent.slideableWidth,                        // carousel slider width
-        cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
+        // cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
+        cSWidth = cards[parent.lastIndex].target - cards[0].target,  // carousel sliding width
         cVWidth = parent.viewportWidth;                            // carousel viewport width
     // return (this.trackWidth * (cSWidth - cVWidth) / cSWidth)
     return (this.trackWidth * cVWidth / cSWidth)
   };
   ScrollHandle.prototype.setThumbWidth = function (thumbWidth, isImpermanent) {
-    var minThumbWidth = this.parent.options.minScrollThumbWidth || 20;
-    thumbWidth = thumbWidth < minThumbWidth ? minThumbWidth : thumbWidth;
-    thumbWidth = thumbWidth > this.trackWidth ? this.trackWidth : thumbWidth;
+    var minThumbWidth = +this.parent.options.minScrollThumbWidth || 20;
+    thumbWidth = Math.max(minThumbWidth, thumbWidth);
+    thumbWidth = Math.min(this.trackWidth, thumbWidth);
     thumbWidth = Math.round(thumbWidth);
     if (!isImpermanent) {
       this.thumbWidth = thumbWidth;
@@ -2580,7 +2558,8 @@
   };
   ScrollHandle.prototype.updatecompanionConversionFactor = function () {
     var cards = this.parent.cards,
-        cSWidth = cards[this.parent.lastIndex].originalTarget - cards[0].originalTarget,  //carousel sliding width
+        // cSWidth = cards[this.parent.lastIndex].originalTarget - cards[0].originalTarget,  //carousel sliding width
+        cSWidth = cards[this.parent.lastIndex].target - cards[0].target,  //carousel sliding width
         sSWidth = this.trackWidth - this.thumbWidth;    //scrollThumb sliding width
 
     // در صورتی که دامنه جا به جایی لغزنده کاروسل صفر باشد دامنه حرکت شستی اسکرول هم صفر خواهد بود
@@ -2673,17 +2652,11 @@
 
 
   // -------------------------- dragging -------------------------- //
-  ScrollHandle.prototype.companionDragStart = function() {
-    this.x = -this.parent.x * this.companionConversionFactor;
-    this.acquiredPositionX = this.x;
-  };
   ScrollHandle.prototype.dragStart = function( event, pointer ) {
     if ( !this.isDraggable ) {
       return;
     }
     this.dragStartPosition = this.x;
-
-    this.parent.companionDragStart();
 
     this.startAnimation();
     window.removeEventListener( 'scroll', this );
@@ -2757,6 +2730,7 @@
 
   // ----- FCarousel defaults ----- //
   $.extend( FCarousel.defaults, {
+    minScrollThumbWidth: 20,
     // scrollHandle: false
   });
   $.extend( FCarousel.selectors, {
@@ -2908,7 +2882,8 @@
     // // index of first or last slide, if previous or next
     // var slides = this.parent.slides;
     var parent = this.parent,
-        lastIndex = parent.lastIndex;
+        // lastIndex = parent.lastIndex;
+        lastIndex = parent.hasStaticSlide ? parent.staticSlides.length - 1 : parent.lastIndex;
     // enable is wrapAround and at least 2 selectable cards
     if ( parent.options.wrapAround && lastIndex > 1 ) {
       this.enable();
@@ -3176,7 +3151,8 @@
       this.x = card.originalTarget; // x comes from first card
       var startMargin = this.isOriginLeft ? 'marginLeft' : 'marginRight';
       this.startMargin = card[startMargin];
-      this.target = card.originalTarget;
+      // this.target = card.originalTarget;
+      this.target = card.target;
     }
     
     // this.updateSize();
@@ -3185,24 +3161,18 @@
   // StaticSlide.prototype.updateSize = function() {
   //   if (this.cards.length) {
   //     var isRtl = !this.isOriginLeft,
-  //         lastCard = this.getLastCard();
+  //         lastCard = this.cards[this.cards.length - 1];
   //     // this.outerWidth = getPosition(this.cards[lastCard].element, isRtl).end - this.target;
   //     this.outerWidth = getPosition(this.cards[lastCard].element, isRtl).end - getPosition(this.cards[0].element, isRtl).start;
   //   }
   // };
     
   StaticSlide.prototype.updateTarget = function() {
-    // // var lastCard = this.getLastCard();
-    // // var endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft';
-    // // var lastEndMargin = lastCard ? lastCard[endMargin] : 0;
-    // // var staticSlideWidth = this.outerWidth - ( this.startMargin + lastEndMargin );
-    // // this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
-
-    // this.target = this.cards[0].originalTarget;
-  };
-
-  StaticSlide.prototype.getLastCard = function() {
-    return this.cards[ this.cards.length - 1 ];
+    var lastCard = this.cards[this.cards.length - 1],
+        endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft',
+        lastEndMargin = lastCard ? lastCard[endMargin] : 0,
+        staticSlideWidth = this.outerWidth - ( this.startMargin + lastEndMargin );
+    this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
   };
 
   StaticSlide.prototype.select = function() {
@@ -3328,6 +3298,9 @@
     // شماره اولین کارت اسلاید انتخاب شده قبلی بدست می آورد ولی شاید بهتر باشد که بر مبنای 
     // این باشد که اسلاید انتخاب شده جدید آن اسلایدی باشد که از اسلایدهای دیگر
     // تعداد کارتهای مشترک بیشتری با اسلاید انتخاب شده قدیمی داشته باشد
+
+    // یا شاید بهتر باشد در زمان ریسایز کردن با توجه به کوچکتر شدن یا بزرگتر شدن صفحه 
+    // بر اساس اولین یاآخرین ایندکس داخل کادر محاسبات انجام بگیرد
     var staticSlidesLength = this.staticSlides.length;
     for (var i = 0; i < staticSlidesLength; i++) {
       var staticSlide = this.staticSlides[i];
@@ -3468,6 +3441,7 @@
       next.apply( this, arguments );
       return;
     }
+
     var index = 1 + this.selectedIndex;
     this.select(index);
   };
@@ -3594,17 +3568,9 @@
       return;
     }
     // position cards at selected target
-
     var staticSlideTargetX = this.target - this.x;
-    // // fardin TODO
-    // // این عبارت موقتا (بدلیل وجود فاصله بین کارتها که ناشی از پدینگ و مارجین نیست)
-    // // جایگزین شده و باید با عبارت درستی جایگزین شود
-    // var staticSlideTargetX = 0;
-
-    // var firstCardX = this.cards[0].x;
     var firstCardX = this.cards[0].originalTarget;
     this.cards.forEach( function( card ) {
-      // var targetX = card.x - firstCardX - staticSlideTargetX;
       var targetX = card.originalTarget - firstCardX - staticSlideTargetX;
       card.renderPosition( targetX );
     });
@@ -3625,14 +3591,13 @@
     if ( !this.options.fade ) {
       return;
     }
-
     this.on("activateStaticSlides", this.activateFade);
   };
   
   proto.activateFade = function() {
     this.fadeIndex = this.selectedIndex;
     this.prevSelectedIndex = this.selectedIndex;
-    this.on( 'select', this.onSelectFade );
+    // this.on( 'select', this.onSelectFade );
     this.on( 'resize', this.onResizeFade );
     this.on( 'dragEnd', this.onDragEndFade );
     this.on( 'settle', this.onSettleFade );
@@ -3647,10 +3612,11 @@
       return;
     }
     // set initial opacity
-    this.staticSlides.forEach( function( staticSlide, i ) {
-      var alpha = i == this.selectedIndex ? 1 : 0;
-      staticSlide.setOpacity( alpha );
-    }, this );
+    // this.staticSlides.forEach( function( staticSlide, i ) {
+    //   var alpha = i == this.selectedIndex ? 1 : 0;
+    //   staticSlide.setOpacity( alpha );
+    // }, this );
+    this.setFadeInstantOpacity();
   };
 
   /* ---- events ---- */
@@ -3658,48 +3624,36 @@
   proto.onResizeFade = function() {
     // in case of resize, keep fadeIndex within current count
     this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
-    // this.fadeIndex = this.correctPrevSelectedIndex();
-    
-    // this.correctSelectedStaticSlideIndex();
     this.prevSelectedIndex = this.selectedIndex;
-    
-    // this.updateSelectedStaticSlide();
-    // this.updateStaticSlidesFade();
+    this.setFadeInstantOpacity();
+  };
+
+  proto.setFadeInstantOpacity = function() {
+    this.staticSlides.forEach( function( staticSlide, i ) {
+      var alpha = i == this.selectedIndex ? 1 : 0;
+      staticSlide.setOpacity( alpha );
+    }, this );
   };
 
   proto.onSelectFade = function() {
     // // in case of resize, keep fadeIndex within current count
     // this.fadeIndex = Math.min( this.prevSelectedIndex, this.staticSlides.length - 1 );
-    this.fadeIndex = this.prevSelectedIndex;
-    this.prevSelectedIndex = this.selectedIndex;
+    // this.prevSelectedIndex = this.selectedIndex;
   };
-
-  // proto.updateStaticSlidesFade = function() {
-  //   // if (!this.selectedStaticSlide) {
-  //   //   return;
-  //   // }
-  //   // set full and 0 opacity on selected & faded staticSlides
-  //   this.selectedStaticSlide.setOpacity( 1 );
-  //   var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
-  //   if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
-  //     // this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
-  //     fadedStaticSlide.setOpacity( 0 );
-  //   }
-  // };
 
   proto.onSettleFade = function() {
     delete this.didDragEnd;
-    if ( !this.options.fade ) {
+    if (!this.options.fade) {
       return;
     }
-
-    // this.updateStaticSlidesFade();
-    // set full and 0 opacity on selected & faded staticSlides
-    this.selectedStaticSlide.setOpacity( 1 );
-    var fadedStaticSlide = this.staticSlides[ this.fadeIndex ];
-    if ( fadedStaticSlide && this.fadeIndex != this.selectedIndex ) {
-      this.staticSlides[ this.fadeIndex ].setOpacity( 0 );
-    }
+    // // set full and 0 opacity on selected & faded staticSlides
+    // this.selectedStaticSlide.setOpacity(1);
+    // var fadedStaticSlide = this.staticSlides[this.fadeIndex];
+    // if (fadedStaticSlide && this.fadeIndex != this.selectedIndex) {
+    //   this.staticSlides[this.fadeIndex].setOpacity(0);
+    // }
+    
+    this.setFadeInstantOpacity();
   };
 
   proto.onDragEndFade = function() {
