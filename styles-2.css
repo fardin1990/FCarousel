@@ -627,6 +627,10 @@ button {
     z-index: 1;
 }
 
+.scroll-handle-Track {
+    cursor: pointer;
+}
+
 
 .nonUniSize-1 img,
 .nonUniSize-2 img {
@@ -704,6 +708,7 @@ button {
     height: 5px;
     margin: 1rem auto 0.5rem;
     border-radius: 3px;
+    cursor: default;
 }
 .one_card_in_front .scroll-handle {
     height: inherit;

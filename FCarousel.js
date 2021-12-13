@@ -453,7 +453,13 @@
     // *** مهم :
     // این روش اصولی نیست - ولی من راه حل دیگری برای این مشکل در این پروژه پیدا نکرده ام
     // ***
-    if (!this.isPointerDown && this.velocity === 0 && this.isFreeScrolling && this.options.freeScrollFriction !== 1 && Math.abs(this.lastVelocity) >= 1) {
+    
+    var posCompanion = this.positioningCompanion,
+        isOnScrollHandleBounds = posCompanion && !this.isScrollbar
+                                && (posCompanion.x >= posCompanion.endBound || posCompanion.x <= 0),
+        isFreeScrolling = !this.isPointerDown && this.isFreeScrolling && this.options.freeScrollFriction !== 1;
+
+    if (isFreeScrolling && !isOnScrollHandleBounds && this.velocity === 0 && Math.abs(this.lastVelocity) >= 1) {
       this.velocity = this.lastVelocity;
     }
   };
@@ -2484,6 +2490,9 @@
 
     this.addStyles();
 
+    // scrollbarTrack click event handler
+    this.onScrollbarTrackClick = this.scrollbarTrackClick.bind(this);
+
     // // init as disabled
     // this.disable();
 
@@ -2507,6 +2516,9 @@
     this.updateBounds();
 
     // this.element.addEventListener('click', this );
+    if (this.parent.options.scrollbarMutualControl) {
+      this.scrollbarTrack.addEventListener('click', this.onScrollbarTrackClick);
+    }
   };
   
   ScrollHandle.prototype.handleEvent = utils.handleEvent;
@@ -2516,8 +2528,28 @@
 
   ScrollHandle.prototype._touchActionValue = 'pan-y';
 
-  ScrollHandle.prototype.onclick = function () {
-    // 
+  // ScrollHandle.prototype.onclick = function () {
+  //   // 
+  // };
+  ScrollHandle.prototype.scrollbarTrackClick = function (event) {
+    if (event.target != this.scrollbarTrack) {
+      return;
+    }
+    var thumbBCR = this.scrollbarThumb.getBoundingClientRect(),
+        pointerDownX = event.pageX,
+        isRight = pointerDownX > thumbBCR.right,
+        isLeft = pointerDownX < thumbBCR.left,
+        isRtl = this.options.rightToLeft;
+
+    this.parent.uiChange();
+    var method;
+    if ((isRtl && isRight) || (!isRtl && isLeft)) {
+      method = 'prev';
+    }
+    else if ((isRtl && isLeft) || (!isRtl && isRight)) {
+      method = 'next';
+    }
+    method && this.parent[method]();
   };
   ScrollHandle.prototype.enable = function() {
     if ( this.isEnabled ) {
