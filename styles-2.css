@@ -165,15 +165,15 @@ button {
     overflow: hidden;
     cursor: pointer;
 }
-.slider-cards-list .f-carousel-control,
-.f-carousel .f-carousel-control,
+.slider-cards-list .carousel-control,
+.f-carousel .carousel-control,
 .pos-vr-center {
     position: absolute;
     -webkit-transform: translateY(-50%);
     transform: translateY(-50%);
     top: 50%;
 }
-.f-carousel-control {
+.carousel-control {
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
@@ -296,15 +296,15 @@ button {
 .f-carousel .f-carousel-items .item.active {
     display: block;
 }
-.f-carousel-control.inactive {
+.carousel-control.inactive {
     opacity: 0.17 !important;
     cursor: default;
 }
-.f-carousel-control.inactive:hover .icon {
+.carousel-control.inactive:hover .icon {
     transform: scale(1) !important;
 }
-.slider-cards-list .f-carousel-control,
-.f-carousel .f-carousel-control {
+.slider-cards-list .carousel-control,
+.f-carousel .carousel-control {
     z-index: 1;
     width: 33px;
     height: 55px;
@@ -317,46 +317,46 @@ button {
     text-align: center;
     opacity: 0.65;
 }
-.f-carousel .f-carousel-control.disabled,
-.f-carousel .f-carousel-control:disabled {
+.f-carousel .carousel-control.disabled,
+.f-carousel .carousel-control:disabled {
     opacity: 0.25 !important;
 }
 @media (prefers-reduced-motion: reduce) {
-    .slider-cards-list .f-carousel-control,
-    .f-carousel .f-carousel-control {
+    .slider-cards-list .carousel-control,
+    .f-carousel .carousel-control {
         transition: none;
     }
 }
-.slider-cards-list .f-carousel-control-prev,
-.f-carousel .f-carousel-control-prev {
+.slider-cards-list .carousel-control-prev,
+.f-carousel .carousel-control-prev {
     right: 0;
     padding-right: 5px;
     border-radius: 0 3px 3px 0;
 }
-.slider-cards-list .f-carousel-control-next,
-.f-carousel .f-carousel-control-next {
+.slider-cards-list .carousel-control-next,
+.f-carousel .carousel-control-next {
     left: 0;
     padding-right: 7px;
     border-radius: 3px 0 0 3px;
 }
-.slider-cards-list .f-carousel-control:focus,
-.slider-cards-list .f-carousel-control:hover,
-.f-carousel .f-carousel-control:focus,
-.f-carousel .f-carousel-control:hover {
+.slider-cards-list .carousel-control:focus,
+.slider-cards-list .carousel-control:hover,
+.f-carousel .carousel-control:focus,
+.f-carousel .carousel-control:hover {
     opacity: 0.9;
     text-decoration: none;
     outline: 0;
 }
-.slider-cards-list .f-carousel-control .icon,
-.f-carousel .f-carousel-control .icon {
+.slider-cards-list .carousel-control .icon,
+.f-carousel .carousel-control .icon {
     transition: all 0.3s;
 }
-.slider-cards-list .f-carousel-control:hover .icon,
-.f-carousel .f-carousel-control:hover .icon {
+.slider-cards-list .carousel-control:hover .icon,
+.f-carousel .carousel-control:hover .icon {
     transform: scale(1.2);
 }
-.slider-cards-list .f-carousel-control .icon,
-.f-carousel .f-carousel-control .icon {
+.slider-cards-list .carousel-control .icon,
+.f-carousel .carousel-control .icon {
     display: inline-block;
     font-size: 1.5rem;
     vertical-align: middle;
@@ -729,14 +729,14 @@ button {
 
 
 
-.ltr .slider-cards-list .f-carousel-control-prev,
-.ltr .f-carousel .f-carousel-control-prev {
+.ltr .slider-cards-list .carousel-control-prev,
+.ltr .f-carousel .carousel-control-prev {
     right: auto;
     left: 0;
     border-radius: 3px 0 0 3px;
 }
-.ltr .slider-cards-list .f-carousel-control-next,
-.ltr .f-carousel .f-carousel-control-next {
+.ltr .slider-cards-list .carousel-control-next,
+.ltr .f-carousel .carousel-control-next {
     left: auto;
     right: 0;
     border-radius: 0 3px 3px 0;

@@ -984,7 +984,8 @@
     };
     proto.identifyCards = function () {
       var selector = this.constructor.selectors.cards,
-          cardElems = $(this.element).find(selector),
+          // cardElems = $(this.element).find(selector),
+          cardElems = $(this.slider).find(selector),
           _this = this;
 
       // get cards from children
@@ -1029,14 +1030,15 @@
         // content is less than gallery size
         var lastSelectableCard = this.cards[this.lastIndex];
         // lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
-        lastSelectableCard.target = contentWidth - this.viewportWidth + this.cursorPosition;
-        this.cards[0].target = this.cursorPosition + firstCardStartMargin;
+        lastSelectableCard.target = contentWidth + firstCardStartMargin - this.viewportWidth + this.cursorPosition;
+        // this.cards[0].target = this.cursorPosition + firstCardStartMargin;
+        this.cards[0].target = this.cursorPosition;
       }
     };
     
     proto.getViewportSizeForSameCards = function () {
-      if (!this.cards.length) {
-        return;
+      if (this.cards.length < 2) {
+        return 1;
       }
       var isRtl = this.options.rightToLeft,
           fCardPos = getPosition(this.cards[0].element, isRtl),
@@ -1052,12 +1054,12 @@
     proto.updateLastSelectableIndex = function () {
       // این فانکشن آخرین ایندکسی که امکان انتخاب (select) شدن را دارد به ما می دهد.
       var lastIndex;
-      if (!this.options.nonUniSize) {
-        // lastIndex = this.cards.length - this.slideCardsLength;
-        lastIndex = this.cards.length - this.getViewportSizeForSameCards();
-        lastIndex = lastIndex < 0 ? 0 : lastIndex;
-      }
-      else {
+      // if (!this.options.nonUniSize) {
+      //   // lastIndex = this.cards.length - this.slideCardsLength;
+      //   lastIndex = this.cards.length - this.getViewportSizeForSameCards();
+      //   lastIndex = lastIndex < 0 ? 0 : lastIndex;
+      // }
+      // else {
         var len = this.cards.length;
         for(var i = 0; i < len; i++) {
           var card = this.cards[i];
@@ -1066,22 +1068,22 @@
             break;
           }
         }
-      }
+      // }
       this.lastIndex = lastIndex;
     };
 
     proto.updateSlides = function() {
       // این فانکشن برای هر کارت در صورتی که آن کارت در موقعیت ابتدای کاروسل قرار گرفته باشد آخرین ایندکسی که در کادر اسلایدر به طور کامل جا می شوند را محاسبه می کند و سپس از این اطلاعات هم برای محاسبه آخرین ایندکس قابل انتخاب شدن در بین تمام کارتها استفاده می کند
       var len = this.cards.length;
-      if (!this.options.nonUniSize) {
-        // در این حالت تعداد کارت هایی که در کادر اسلایدر به طور کامل جا می شوند را  بر اساس فاصله دو کارت اول کاروسل محاسبه می کند
-        var viewportSize = this.getViewportSizeForSameCards();
-        for (var i = 0; i < len; i++) {
-          var index = Math.min(i + viewportSize - 1, len - 1)
-          this.cards[i].updateLastIndexOfCardSlide(index);
-        }
-      }
-      else {
+      // if (!this.options.nonUniSize) {
+      //   // در این حالت تعداد کارت هایی که در کادر اسلایدر به طور کامل جا می شوند را  بر اساس فاصله دو کارت اول کاروسل محاسبه می کند
+      //   var viewportSize = this.getViewportSizeForSameCards();
+      //   for (var i = 0; i < len; i++) {
+      //     var index = Math.min(i + viewportSize - 1, len - 1)
+      //     this.cards[i].updateLastIndexOfCardSlide(index);
+      //   }
+      // }
+      // else {
         for (var i = 0; i < len; i++) {
           var lastIndexOfSlide = i,
               startCard = this.cards[i],
@@ -1101,7 +1103,7 @@
           }
           startCard.updateLastIndexOfCardSlide(lastIndexOfSlide);
         }
-      }
+      // }
       this.updateLastSelectableIndex();
     };
     
@@ -1462,6 +1464,10 @@
         this.updateSlides();
       // }
 
+      // keep track of cardX (all carousel cards width) for wrap-around
+      var lastCard = this.cards[this.cards.length - 1];
+      this.slideableWidth = lastCard.originalTarget + lastCard.width;
+      
       // contain slides target
       this._containSlides();
     };
@@ -2584,7 +2590,7 @@
         // cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
         cSWidth = cards[parent.lastIndex].target - cards[0].target,  // carousel sliding width
         cVpWidth = parent.viewportWidth;                            // carousel viewport width
-    return (this.trackWidth * cVpWidth / cSWidth)
+    return (this.trackWidth * cVpWidth / (cVpWidth + cSWidth));
   };
   ScrollHandle.prototype.setThumbWidth = function (thmbWdth, isImpermanent) {
     var minThumbWidth = +this.parent.options.minScrollThumbWidth || 20;
@@ -2834,29 +2840,41 @@
     var leftDirection = this.parent.options.rightToLeft ? 1 : -1;
     this.isLeft = this.direction == leftDirection;
 
-    var element = this.element = document.createElement('button');
-    element.className = 'f-carousel-control';
-    element.className += this.isPrevious ? ' f-carousel-control-prev' : ' f-carousel-control-next';
-    // prevent button from submitting form
-    element.setAttribute( 'type', 'button' );
+    // var element = this.element = document.createElement('button');
+    // element.className = 'carousel-control';
+    // element.className += this.isPrevious ? ' carousel-control-prev' : ' carousel-control-next';
+    // // prevent button from submitting form
+    // element.setAttribute( 'type', 'button' );
+
+    
+    var parent = this.parent,
+        selectors = parent.constructor.selectors,
+        btnSelector = this.isPrevious ? selectors.previousButton : selectors.nextButton;
+
+    // // this.controllButtons = $(parent.element).find(selectors.controllButtons)[0];
+    // this.previousButton = $(parent.element).find(btnSelector)[0];
+
+    var btnElem = this.element = $(parent.element).find(btnSelector)[0];
+
     // init as disabled
     this.disable();
 
-    element.setAttribute( 'aria-label', this.isPrevious ? 'Previous' : 'Next' );
+    // element.setAttribute( 'aria-label', this.isPrevious ? 'Previous' : 'Next' );
+    btnElem.setAttribute( 'aria-label', this.isPrevious ? 'Previous' : 'Next' );
 
-    var leftIcon = this.parent.options.leftBtnIcon,
-      rightIcon = this.parent.options.rightBtnIcon;
-    if (leftIcon && rightIcon) {
-      var iconElem = document.createElement("span");
-      iconElem.className = this.isLeft ? leftIcon : rightIcon;
-      element.appendChild(iconElem);
-    }
+    // var leftIcon = this.parent.options.leftBtnIcon,
+    //   rightIcon = this.parent.options.rightBtnIcon;
+    // if (leftIcon && rightIcon) {
+    //   var iconElem = document.createElement("span");
+    //   iconElem.className = this.isLeft ? leftIcon : rightIcon;
+    //   element.appendChild(iconElem);
+    // }
 
-    if (false) {
-      // create arrow
-      var svg = this.createSVG();
-      element.appendChild( svg );
-    }
+    // if (false) {
+    //   // create arrow
+    //   var svg = this.createSVG();
+    //   element.appendChild( svg );
+    // }
     // this.parent.element.appendChild(element);
     
     // events
@@ -2891,7 +2909,7 @@
     // how the handleEvent in utils.handleEvent called
     
     // add to DOM
-    this.parent.element.appendChild( this.element );
+    // this.parent.element.appendChild( this.element );
   };
   
   PrevNextBtn.prototype.handleEvent = utils.handleEvent;
@@ -2946,6 +2964,11 @@
     //   x2: 70, y2: 40,
     //   x3: 30
     // }
+  });
+  $.extend( FCarousel.selectors, {
+    // controllButtons: ".carousel-control",
+    previousButton: ".carousel-control-prev",
+    nextButton: ".carousel-control-next"
   });
 
   FCarousel.createMethods.push('_createPrevNextButtons');
@@ -3169,9 +3192,9 @@
 ( function( window, factory ) {
   // browser global
   window.FCarousel = window.FCarousel || {};
-  window.FCarousel.StaticSlide = factory(window.getPosition);
+  window.FCarousel.StaticSlide = factory(window, window.utils, window.getPosition);
 
-}( window, function factory(getPosition) {
+}( window, function factory(window, utils, getPosition) {
 'use strict';
 
   function StaticSlide( parent ) {
@@ -3263,9 +3286,10 @@
       return;
     }
 
-    // keep track of cardX (all carousel cards width) for wrap-around
-    var lastCard = this.cards[this.cards.length - 1];
-    this.slideableWidth = lastCard.originalTarget + lastCard.width;
+    // // keep track of cardX (all carousel cards width) for wrap-around
+    // var lastCard = this.cards[this.cards.length - 1];
+    // this.slideableWidth = lastCard.originalTarget + lastCard.width;
+
     // در این مرحله ممکن است کاروسل سی اس اس اینلاینی برای تنظیم ارتفاع نگرفته باشد
     // و از آنجایی که پوزیشن همه ی کارتها اپسولوت است ارتفاعش صفر باشد؛ که این حالت باعث می شود متد
     // updateSliderWidth() مقدار undefined را برگرداند
@@ -3621,6 +3645,7 @@
   StaticSlide.prototype.setOpacity = function( alpha ) {
     this.cards.forEach( function( card ) {
       card.element.style.opacity = alpha;
+      // card.element.style.zIndex = Math.round(alpha);
     });
   };
 
