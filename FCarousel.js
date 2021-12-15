@@ -1017,20 +1017,20 @@
         }
     };
 
-    proto.getViewportSizeForSameCards = function () {
-        if (this.cards.length < 2) {
-            return 1;
-        }
-        var isRtl = this.options.rightToLeft,
-            fCardPos = getPosition(this.cards[0].element, isRtl),
-            sCardPos = getPosition(this.cards[1].element, isRtl),
-            cardsDistance_ptp = Math.abs(sCardPos.start - fCardPos.start),
-            cardsDistance_trgt = Math.abs(this.cards[1].originalTarget - this.cards[0].originalTarget),
-            cardsDistance = Math.max(cardsDistance_ptp, cardsDistance_trgt),
-            slideLength = Math.floor(this.viewportWidth / cardsDistance);
+    // proto.getViewportSizeForSameCards = function () {
+    //     if (this.cards.length < 2) {
+    //         return 1;
+    //     }
+    //     var isRtl = this.options.rightToLeft,
+    //         fCardPos = getPosition(this.cards[0].element, isRtl),
+    //         sCardPos = getPosition(this.cards[1].element, isRtl),
+    //         cardsDistance_ptp = Math.abs(sCardPos.start - fCardPos.start),
+    //         cardsDistance_trgt = Math.abs(this.cards[1].originalTarget - this.cards[0].originalTarget),
+    //         cardsDistance = Math.max(cardsDistance_ptp, cardsDistance_trgt),
+    //         slideLength = Math.floor(this.viewportWidth / cardsDistance);
 
-        return slideLength > 0 ? slideLength : 1;
-    };
+    //     return slideLength > 0 ? slideLength : 1;
+    // };
 
     proto.updateLastSelectableIndex = function () {
         // این فانکشن آخرین ایندکسی که امکان انتخاب (select) شدن را دارد به ما می دهد.
@@ -1091,11 +1091,11 @@
     // -----  ----- //
 
     /**
-        * emits events via eventEmitter and jQuery events
-        * @param {String} type - name of event
-        * @param {Event} event - original event
-        * @param {Array} args - extra arguments
-        */
+    * emits events via eventEmitter and jQuery events
+    * @param {String} type - name of event
+    * @param {Event} event - original event
+    * @param {Array} args - extra arguments
+    */
     proto.dispatchEvent = function (type, event, args) {
         var emitArgs = event ? [event].concat(args) : args;
         this.emitEvent(type, emitArgs);
@@ -1155,25 +1155,17 @@
         }
     };
     proto.prev = function (isWrap, isInstant) {
-        // var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
-        //     index = -step + this.selectedIndex;
-
         var slctdIndx = this.selectedIndex;
         var step = +this.options.step ||
             (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx, true) : 1);
         var index = slctdIndx - step;
-
         this.select(index, isWrap, isInstant);
     };
     proto.next = function (isWrap, isInstant) {
-        // var step = +this.options.step || (this.options.step == "p" ? this.slideCardsLength : 1),
-        //     index = step + this.selectedIndex;
-
         var slctdIndx = this.selectedIndex;
         var step = +this.options.step ||
             (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx) : 1);
         var index = slctdIndx + step;
-
         this.select(index, isWrap, isInstant);
     };
     proto.updateSelectedCard = function () {
@@ -1447,7 +1439,7 @@
 
         // keep track of cardX (all carousel cards width) for wrap-around
         var lastCard = this.cards[this.cards.length - 1];
-        this.slideableWidth = lastCard.originalTarget + lastCard.width;
+        this.slideableWidth = lastCard ? lastCard.originalTarget + lastCard.width : 0;
 
         // contain slides target
         this._containSlides();
@@ -2563,7 +2555,7 @@
             cards = parent.cards,
             // cSWidth = parent.slideableWidth,                        // carousel slider width
             // cSWidth = cards[parent.lastIndex].originalTarget - cards[0].originalTarget,  // carousel sliding width
-            cSWidth = cards[parent.lastIndex].target - cards[0].target,  // carousel sliding width
+            cSWidth = cards.length ? cards[parent.lastIndex].target - cards[0].target : 0,  // carousel sliding width
             cVpWidth = parent.viewportWidth;                            // carousel viewport width
         return (this.trackWidth * cVpWidth / (cVpWidth + cSWidth));
     };
@@ -2582,7 +2574,7 @@
     ScrollHandle.prototype.updatecompanionConversionFactor = function () {
         var cards = this.parent.cards,
             // cSWidth = cards[this.parent.lastIndex].originalTarget - cards[0].originalTarget,  //carousel sliding width
-            cSWidth = cards[this.parent.lastIndex].target - cards[0].target,  //carousel sliding width
+            cSWidth = cards.length ? cards[this.parent.lastIndex].target - cards[0].target : 0,  //carousel sliding width
             sSWidth = this.trackWidth - this.thumbWidth;    //scrollThumb sliding width
 
         // در صورتی که دامنه جا به جایی لغزنده کاروسل صفر باشد دامنه حرکت شستی اسکرول هم صفر خواهد بود
@@ -3063,7 +3055,6 @@
 
         this.updateSlideBounds();
 
-        // if (this.slideFirstIndex != formerSlideFirstIndex || navSelectedIndex < this.selectedIndex || navSelectedIndex > this.selectedIndex + this.slideCardsLength - 1) {
         if (this.slideFirstIndex != formerSlideFirstIndex || navSelectedIndex < this.selectedIndex || navSelectedIndex > this.cards[this.selectedIndex].lastIndexOfCardSlide) {
             this.selectCard(this.slideFirstIndex, false, isInstant);
         }
@@ -3109,7 +3100,6 @@
     };
 
     proto.changeNavSelectedClass = function (method) {
-        // this.navSelectedElement.classList[ method ]('is-nav-selected');
         this.navSelectedElement.classList[method]('nav-selected');
     };
 
