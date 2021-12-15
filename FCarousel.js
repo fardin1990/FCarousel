@@ -718,19 +718,29 @@
     };
 
     proto.updateTarget = function () {
-        var marginProperty = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
-        // this.target = this.originalTarget + this[marginProperty] + this.width * this.parent.cardAlign;
+        var startMarginProperty = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
+        var endMarginProperty = this.parent.originSide == 'left' ? 'marginRight' : 'marginLeft';
+        // // this.target = this.originalTarget + this[marginProperty] + this.width * this.parent.cardAlign;
 
         if (this.parent.wrapAround) {
             // 
         }
         else {
+            var lastCardOfSlide = this.parent.cards[this.lastIndexOfCardSlide];
+
+            var cardAlign = this.parent.cardAlign;
+            // if (lastCardOfSlide[endMarginProperty]) debugger;
+            var correctionAlignMargin = cardAlign < 1 ? this[startMarginProperty] 
+                                                        : lastCardOfSlide[endMarginProperty];
             // this.target = this.originalTarget + this[marginProperty] + 
             //               (this.parent.cards[this.lastIndexOfCardSlide].originalEndTarget 
             //               - this.originalTarget) * this.parent.cardAlign;
-            this.target = this.originalTarget +
-                (this.parent.cards[this.lastIndexOfCardSlide].originalEndTarget
-                    - this.originalTarget) * this.parent.cardAlign;
+            // this.target = this.originalTarget +
+            //     (this.parent.cards[this.lastIndexOfCardSlide].originalEndTarget
+            //         - this.originalTarget) * this.parent.cardAlign;
+            this.target = this.originalTarget 
+                         + (lastCardOfSlide.originalEndTarget + correctionAlignMargin - this.originalTarget)
+                         * this.parent.cardAlign;
         }
     };
     proto.getDistanceFromStart = function () {
@@ -740,7 +750,7 @@
             cardStartPosition = getPosition(this.element, isRightToLeft).start,
             startMargin = this.parent.originSide == 'left' ? 'marginLeft' : 'marginRight';
 
-        return Math.abs(sliderStartPosition - (cardStartPosition + this[startMargin]));
+        return Math.abs(sliderStartPosition - cardStartPosition) - this[startMargin];
     };
     proto.updateLastIndexOfCardSlide = function (index) {
         this.lastIndexOfCardSlide = index;
@@ -905,7 +915,7 @@
 
         this.updateViewportWidth();
         this.setCardAlign();
-        this.updateSliderWidth();
+        // this.updateSliderWidth();
         this.positionCards();
         this.setGallerySize();
 
@@ -984,7 +994,13 @@
     };
     proto.updateSliderWidth = function () {
         // this.slideableWidth = this.getSliderWidth();
-        this.slideableWidth = this.slider.scrollWidth;
+        // this.slideableWidth = this.slider.scrollWidth;
+        
+        var lastCard = this.cards[this.cards.length - 1],
+            endMarginProperty = this.originSide == 'left' ? 'marginRight' : 'marginLeft',
+            lCardEndMargin = lastCard[endMarginProperty];
+        // this.slideableWidth = lastCard ? lastCard.originalTarget + lastCard.width + lCardEndMargin : 0;
+        this.slideableWidth = lastCard ? lastCard.originalEndTarget + lCardEndMargin : 0;
     };
     // proto.getSliderWidth = function () {
     //   // var isRtl = this.options.rightToLeft;
@@ -999,20 +1015,20 @@
         if (!this.options.contain || this.options.wrapAround || !this.cards.length || this.options.fade) {
             return;
         }
-        var isRtl = this.options.rightToLeft,
-            beginMargin = isRtl ? 'marginRight' : 'marginLeft',
-            endMargin = isRtl ? 'marginLeft' : 'marginRight',
-            firstCardStartMargin = this.cards[0][beginMargin],
-                lastCardEndMargin = this.cards[this.cards.length - 1][endMargin],
-                contentWidth = this.slideableWidth - lastCardEndMargin,
+        // var isRtl = this.options.rightToLeft,
+            // beginMargin = isRtl ? 'marginRight' : 'marginLeft',
+            // endMargin = isRtl ? 'marginLeft' : 'marginRight',
+            // firstCardStartMargin = this.cards[0][beginMargin],
+            // lastCardEndMargin = this.cards[this.cards.length - 1][endMargin],
+            // contentWidth = this.slideableWidth - lastCardEndMargin;
+        var contentWidth = this.slideableWidth,
             isContentSmaller = contentWidth < this.viewportWidth;
 
         if (!isContentSmaller) {
             // content is less than gallery size
             var lastSelectableCard = this.cards[this.lastIndex];
             // lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
-            lastSelectableCard.target = contentWidth + firstCardStartMargin - this.viewportWidth + this.cursorPosition;
-            // this.cards[0].target = this.cursorPosition + firstCardStartMargin;
+            lastSelectableCard.target = contentWidth - this.viewportWidth + this.cursorPosition;
             this.cards[0].target = this.cursorPosition;
         }
     };
@@ -1364,12 +1380,12 @@
         }
         this.updateViewportWidth();
         this.cursorPosition = this.viewportWidth * this.cardAlign;
-        this.updateSliderWidth();
+        this.positionCards();
+        // this.updateSliderWidth();
         // wrap values
         // if ( this.options.wrapAround ) {
         //   this.x = utils.modulo( this.x, this.slideableWidth );
         // }
-        this.positionCards();
         // this._getWrapShiftCards();
         this.setGallerySize();
 
@@ -1437,9 +1453,11 @@
         this.updateSlides();
         // }
 
-        // keep track of cardX (all carousel cards width) for wrap-around
-        var lastCard = this.cards[this.cards.length - 1];
-        this.slideableWidth = lastCard ? lastCard.originalTarget + lastCard.width : 0;
+        // // keep track of cardX (all carousel cards width) for wrap-around
+        // var lastCard = this.cards[this.cards.length - 1];
+        // this.slideableWidth = lastCard ? lastCard.originalTarget + lastCard.width : 0;
+
+        this.updateSliderWidth();
 
         // contain slides target
         this._containSlides();
