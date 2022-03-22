@@ -1,2 +1,2 @@
-# curly-journey
+# FCarousel
 this projects needs jquery
