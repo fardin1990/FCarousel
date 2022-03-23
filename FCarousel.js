@@ -3182,7 +3182,7 @@
     
         this.parent.uiChange();
 
-        var dot_index = this.dots.indexOf( target )
+        var dot_index = this.dots.indexOf( target ),
             card_index;
 
         if (!this.parent.staticSlides) {
