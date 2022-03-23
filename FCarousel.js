@@ -1102,6 +1102,7 @@
         }
         // }
         this.updateLastSelectableIndex();
+        this.updateStaticSlideStartCardIndexes();
     };
 
     // -----  ----- //
@@ -1359,6 +1360,32 @@
             cardElems = cardElems.concat(card.element);
         }
         return cardElems;
+    };
+
+    proto.updateStaticSlideStartCardIndexes = function () {
+        var stSlSt_arr = [],
+            lastIndex = this.lastIndex,
+            step = this.options.step !== "p" ? Math.max(parseInt(this.options.step), 1) : "p";
+
+        if (step === "p") {
+            var index = 0;
+            while (index <= lastIndex) {
+                stSlSt_arr.push(index);
+                index = this.cards[index].lastIndexOfCardSlide + 1;
+            }
+        }
+        else {
+            stSlSt_arr = this.cards.map(function (card, i) {
+                return i;
+            }).filter(function (i) {
+                return i <= lastIndex && i % step === 0;
+            });
+        }
+        if (stSlSt_arr.indexOf(lastIndex) < 0) {
+            stSlSt_arr.push(lastIndex);
+        }
+
+        this.staticSlidesStartIndexes = stSlSt_arr;
     };
 
     // -------------------------- events -------------------------- //
@@ -3052,7 +3079,12 @@
         // var delta = this.parent.slides.length - this.dots.length;
         
         // get difference between number of cards and number of dots
-        var delta = this.parent.lastIndex + 1 - this.dots.length;
+
+        var staticSlides_length = this.parent.staticSlidesStartIndexes.length;
+
+        // var delta = this.parent.lastIndex + 1 - this.dots.length;
+        var delta = staticSlides_length - this.dots.length;
+
         if ( delta > 0 ) {
             this.addDots( delta );
         } else if ( delta < 0 ) {
@@ -3097,7 +3129,46 @@
         if ( !this.dots.length ) {
             return;
         }
-        this.selectedDot = this.dots[ this.parent.selectedIndex ];
+
+        var parent = this.parent,
+            stSlSt_arr = parent.staticSlidesStartIndexes,
+            selctd_ind = parent.selectedIndex,
+            selectedDot_index;
+
+        if (!this.parent.staticSlides) {
+            selectedDot_index = stSlSt_arr.indexOf(selctd_ind);
+
+            if (selectedDot_index < 0) {
+                var prev_selectable_ind = selctd_ind - 1,
+                    next_selectable_ind;
+
+                while (prev_selectable_ind >= 0 && stSlSt_arr.indexOf(prev_selectable_ind) < 0) {
+                    prev_selectable_ind--;
+                }
+
+                next_selectable_ind = stSlSt_arr.indexOf(prev_selectable_ind) + 1 < stSlSt_arr.length ? stSlSt_arr[stSlSt_arr.indexOf(prev_selectable_ind) + 1] : stSlSt_arr[stSlSt_arr.indexOf(prev_selectable_ind)];
+
+                var down_diff = Math.abs(selctd_ind - prev_selectable_ind),
+                    up_diff = Math.abs(selctd_ind - next_selectable_ind),
+                    last_dot_ind = this.dots.indexOf(this.selectedDot);
+
+                if (down_diff < up_diff) {
+                    selectedDot_index = stSlSt_arr.indexOf(prev_selectable_ind);
+                }
+                else if (down_diff > up_diff) {
+                    selectedDot_index = stSlSt_arr.indexOf(next_selectable_ind);
+                }
+                else {
+                    selectedDot_index = Math.abs(last_dot_ind - prev_selectable_ind) < Math.abs(last_dot_ind - next_selectable_ind) ? stSlSt_arr.indexOf(prev_selectable_ind) : stSlSt_arr.indexOf(next_selectable_ind);
+                }
+            }
+        }
+        else {
+            selectedDot_index = selctd_ind;
+        }
+
+        // this.selectedDot = this.dots[ this.parent.selectedIndex ];
+        this.selectedDot = this.dots[ selectedDot_index ];
         this.selectedDot.className = 'dot is-selected';
         this.selectedDot.setAttribute( 'aria-current', 'step' );
     };
@@ -3110,8 +3181,18 @@
         }
     
         this.parent.uiChange();
-        var index = this.dots.indexOf( target );
-        this.parent.select( index );
+
+        var dot_index = this.dots.indexOf( target )
+            card_index;
+
+        if (!this.parent.staticSlides) {
+            card_index = this.parent.staticSlidesStartIndexes[dot_index];
+        }
+        else {
+            card_index = dot_index;
+        }
+
+        this.parent.select( card_index );
     };
     
     PageDots.prototype.destroy = function() {
