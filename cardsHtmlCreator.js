@@ -24,6 +24,8 @@ function createCardElems() {
     $(allCardPlh).each(function () {
         var cardPlh = this;
         var itemsConfig = cardPlh.dataset.itemsInfo;
+        var carouselLazyLoad = cardPlh.dataset.carouselLazyload === false || cardPlh.dataset.carouselLazyload === "false" ? false : true;
+        var lazyLoadingClass = carouselLazyLoad ? "pre-load" : "replace";
 
         var isCustomConfigSet = false;
         try {
@@ -62,7 +64,7 @@ function createCardElems() {
             }
 
             cards_html +=               '<div class="card-img-cont"> \n' +
-                                            '<a href="#" class="progressive replace" data-href="' + img_url + '"> \n' +
+                                            '<a href="#" class="progressive ' + lazyLoadingClass + '" data-href="' + img_url + '"> \n' +
                                                 '<img src="images/default-placeholder-186x167.png" class="preview" alt="" width="186" height="167" /> \n' +
                                             '</a> \n' +
                                         '</div> \n';
