@@ -997,9 +997,9 @@
         // this.slideableWidth = this.getSliderWidth();
         // this.slideableWidth = this.slider.scrollWidth;
         
-        var lastCard = this.cards[this.cards.length - 1],
+        var lastCard = this.cards.length && this.cards[this.cards.length - 1],
             endMarginProperty = this.originSide == 'left' ? 'marginRight' : 'marginLeft',
-            lCardEndMargin = lastCard[endMarginProperty];
+            lCardEndMargin = lastCard ? lastCard[endMarginProperty] : 0;
         // this.slideableWidth = lastCard ? lastCard.originalTarget + lastCard.width + lCardEndMargin : 0;
         this.slideableWidth = lastCard ? lastCard.originalEndTarget + lCardEndMargin : 0;
     };
