@@ -837,7 +837,6 @@
         this._create();
     };
     FCarousel.defaults = {
-        type: "mc",
         cardAlign: "right",
         rightToLeft: true,
         friction: 0.28,          // friction when selecting
