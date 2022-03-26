@@ -446,4 +446,8 @@ img {
     /* margin: 0 10px 0 6px; */
     margin: 0 25px 0 6px;
 }
+.f-carousel.cards-with-margin-2 .card {
+    /* margin: 0 10px 0 6px; */
+    margin: 0 19px 0 38px;
+}
 

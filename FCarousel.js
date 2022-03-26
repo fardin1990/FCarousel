@@ -596,8 +596,15 @@
         if (dragDown || this.isFreeScrolling || !this.cards.length) {
             return;
         }
-        // var distance = this.selectedCard.originalTarget * -1 - this.x;
-        var distance = this.selectedCard.target * -1 - this.x;
+
+        if (this.options.contain && !this.options.fade && this.selectedStaticSlide) {
+            var distance = this.selectedStaticSlide.target * -1 - this.x;
+        }
+        else {
+            // var distance = this.selectedCard.originalTarget * -1 - this.x;
+            var distance = this.selectedCard.target * -1 - this.x;
+        }
+
         var force = distance * this.options.selectedAttraction;
         this.applyForce(force);
     };
@@ -659,7 +666,12 @@
             return;
         }
         // this.x = -this.selectedCard.originalTarget;
-        this.x = -this.selectedCard.target;
+        if (this.options.contain && !this.options.fade && this.selectedStaticSlide) {
+            this.x = -this.selectedStaticSlide.target;
+        }
+        else {
+            this.x = -this.selectedCard.target;
+        }
         this.velocity = 0; // stop wobble
         delete this.lastVelocity;
         this.positionSlider();
@@ -848,7 +860,9 @@
         scrollbarMutualControl: true,
         contain: true,
         step: 1,
+        // onStepsPlacement: false,
         initialIndex: 0
+        // freeScroll: false,
         // nonUniSize: false,
         // accessibility: true,
         // adaptiveHeight: false,
@@ -967,7 +981,7 @@
         this.cursorPosition = this.viewportWidth * this.cardAlign;
     };
     proto.setGallerySize = function () {
-        if (this.options.setGallerySize || this.options.fade) {
+        if (this.options.setGallerySize || this.hasStaticSlide) {
             var height = this.options.adaptiveHeight && this.selectedStaticSlide ?
                 this.selectedStaticSlide.height : this.maxCardHeight;
             this.viewport.style.height = height + 'px';
@@ -1173,16 +1187,29 @@
     };
     proto.prev = function (isWrap, isInstant) {
         var slctdIndx = this.selectedIndex;
-        var step = +this.options.step ||
-            (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx, true) : 1);
-        var index = slctdIndx - step;
+        var index;
+
+        if (this.hasStaticSlide) {
+            index = slctdIndx - 1;
+        }
+        else {
+            var step = +this.options.step || (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx, true) : 1);
+            index = slctdIndx - step;
+        }
+
         this.select(index, isWrap, isInstant);
     };
     proto.next = function (isWrap, isInstant) {
         var slctdIndx = this.selectedIndex;
-        var step = +this.options.step ||
-            (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx) : 1);
-        var index = slctdIndx + step;
+        var index;
+
+        if (this.hasStaticSlide) {
+            index = slctdIndx + 1;
+        }
+        else {
+            var step = +this.options.step || (this.options.step == "p" ? this.getCurrentOrPreviousSlideCardsLength(slctdIndx) : 1);
+            index = slctdIndx + step;
+        }
         this.select(index, isWrap, isInstant);
     };
     proto.updateSelectedCard = function () {
@@ -1367,25 +1394,61 @@
             lastIndex = this.lastIndex,
             step = this.options.step !== "p" ? Math.max(parseInt(this.options.step), 1) : "p";
 
-        if (step === "p") {
-            var index = 0;
-            while (index <= lastIndex) {
-                stSlSt_arr.push(index);
+        var index = 0;
+        while (index <= lastIndex) {
+            stSlSt_arr.push(index);
+            if (step === "p" || this.options.fade) {
                 index = this.cards[index].lastIndexOfCardSlide + 1;
             }
+            else {
+                index += step;
+            }
         }
-        else {
-            stSlSt_arr = this.cards.map(function (card, i) {
-                return i;
-            }).filter(function (i) {
-                return i <= lastIndex && i % step === 0;
-            });
-        }
-        if (stSlSt_arr.indexOf(lastIndex) < 0) {
-            stSlSt_arr.push(lastIndex);
+
+        if (stSlSt_arr.indexOf(lastIndex) < 0 && index < this.cards.length) {
+            stSlSt_arr.push(index);
         }
 
         this.staticSlidesStartIndexes = stSlSt_arr;
+    };
+
+    proto.getNextOrPreviousStaticSlideStartIndex = function (index, isPreviousSlide) {
+        var currStep_startIndex = this.getCurrentStaticSlideStartIndex(index);
+
+        if (currStep_startIndex != index && isPreviousSlide) {
+            return currStep_startIndex;
+        }
+        else {
+            if (isPreviousSlide) {
+                if (currStep_startIndex > 0) {
+                    return this.getCurrentStaticSlideStartIndex(currStep_startIndex - 1);
+                }
+                else {
+                    return currStep_startIndex;
+                }
+            }
+            else {
+                var stSlSt_arr = this.staticSlidesStartIndexes;
+
+                return stSlSt_arr.indexOf(currStep_startIndex) + 1 < stSlSt_arr.length ? 
+                stSlSt_arr[stSlSt_arr.indexOf(currStep_startIndex) + 1] : currStep_startIndex;
+            }
+        }
+    }
+    
+    proto.getCurrentStaticSlideStartIndex = function (index) {
+        var is_on_step = this.staticSlidesStartIndexes.indexOf(index) >= 0;
+        if (is_on_step) {
+            return index;
+        }
+        else {
+            var prev_selectable_ind = index - 1;
+
+            while (prev_selectable_ind >= 0 && this.staticSlidesStartIndexes.indexOf(prev_selectable_ind) < 0) {
+                prev_selectable_ind--;
+            }
+            return prev_selectable_ind;
+        }
     };
 
     // -------------------------- events -------------------------- //
@@ -3132,43 +3195,42 @@
 
         var parent = this.parent,
             stSlSt_arr = parent.staticSlidesStartIndexes,
-            selctd_ind = parent.selectedIndex,
-            selectedDot_index;
+            slctd_ind = parent.selectedIndex,
+            slctdDot_index;
 
-        if (!this.parent.staticSlides) {
-            selectedDot_index = stSlSt_arr.indexOf(selctd_ind);
+        if (!this.parent.hasStaticSlide) {
+            slctdDot_index = stSlSt_arr.indexOf(slctd_ind);
 
-            if (selectedDot_index < 0) {
-                var prev_selectable_ind = selctd_ind - 1,
-                    next_selectable_ind;
-
-                while (prev_selectable_ind >= 0 && stSlSt_arr.indexOf(prev_selectable_ind) < 0) {
-                    prev_selectable_ind--;
-                }
-
-                next_selectable_ind = stSlSt_arr.indexOf(prev_selectable_ind) + 1 < stSlSt_arr.length ? stSlSt_arr[stSlSt_arr.indexOf(prev_selectable_ind) + 1] : stSlSt_arr[stSlSt_arr.indexOf(prev_selectable_ind)];
-
-                var down_diff = Math.abs(selctd_ind - prev_selectable_ind),
-                    up_diff = Math.abs(selctd_ind - next_selectable_ind),
-                    last_dot_ind = this.dots.indexOf(this.selectedDot);
-
-                if (down_diff < up_diff) {
-                    selectedDot_index = stSlSt_arr.indexOf(prev_selectable_ind);
-                }
-                else if (down_diff > up_diff) {
-                    selectedDot_index = stSlSt_arr.indexOf(next_selectable_ind);
+            if (slctdDot_index < 0) {
+                if (slctd_ind === this.parent.lastIndex) {
+                    slctdDot_index = stSlSt_arr.length - 1;
                 }
                 else {
-                    selectedDot_index = Math.abs(last_dot_ind - prev_selectable_ind) < Math.abs(last_dot_ind - next_selectable_ind) ? stSlSt_arr.indexOf(prev_selectable_ind) : stSlSt_arr.indexOf(next_selectable_ind);
+                    var prev_selectable_ind = this.parent.getCurrentStaticSlideStartIndex(slctd_ind),
+                        next_selectable_ind = this.parent.getNextOrPreviousStaticSlideStartIndex(slctd_ind);
+
+                    var down_diff = Math.abs(slctd_ind - prev_selectable_ind),
+                        up_diff = Math.abs(slctd_ind - next_selectable_ind),
+                        last_dot_ind = this.dots.indexOf(this.selectedDot);
+
+                    if (down_diff < up_diff) {
+                        slctdDot_index = stSlSt_arr.indexOf(prev_selectable_ind);
+                    }
+                    else if (down_diff > up_diff) {
+                        slctdDot_index = stSlSt_arr.indexOf(next_selectable_ind);
+                    }
+                    else {
+                        slctdDot_index = Math.abs(stSlSt_arr[last_dot_ind] - prev_selectable_ind) < Math.abs(stSlSt_arr[last_dot_ind] - next_selectable_ind) ? stSlSt_arr.indexOf(prev_selectable_ind) : stSlSt_arr.indexOf(next_selectable_ind);
+                    }
                 }
             }
         }
         else {
-            selectedDot_index = selctd_ind;
+            slctdDot_index = slctd_ind;
         }
 
         // this.selectedDot = this.dots[ this.parent.selectedIndex ];
-        this.selectedDot = this.dots[ selectedDot_index ];
+        this.selectedDot = this.dots[ slctdDot_index ];
         this.selectedDot.className = 'dot is-selected';
         this.selectedDot.setAttribute( 'aria-current', 'step' );
     };
@@ -3471,7 +3533,12 @@
             endMargin = this.isOriginLeft ? 'marginRight' : 'marginLeft',
             lastEndMargin = lastCard ? lastCard[endMargin] : 0,
             staticSlideWidth = this.outerWidth - (this.startMargin + lastEndMargin);
-        this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
+        if (this.parent.options.fade) {
+            this.target = this.x + this.startMargin + staticSlideWidth * this.parent.cardAlign;
+        }
+        else {
+            this.target = this.x + staticSlideWidth * this.parent.cardAlign;
+        }
     };
 
     StaticSlide.prototype.select = function () {
@@ -3501,7 +3568,7 @@
     var proto = FCarousel.prototype;
 
     proto._createStaticSlides = function () {
-        if (!this.options.fade) {
+        if (!this.options.fade && !this.options.onStepsPlacement) {
             return;
         }
         this.hasStaticSlide = true;
@@ -3516,7 +3583,7 @@
     var _positionCards = proto._positionCards;
     proto._positionCards = function (index) {
         _positionCards.apply(this, arguments);
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             return;
         }
 
@@ -3529,18 +3596,31 @@
         // updateSliderWidth() مقدار undefined را برگرداند
 
         // slides
-        // برای staticSlide ها هم باید مثل کارت ها متدی مثل 
-        // متد _containSlides نوشته شود که البته احتمالا باید متدی جداگانه و متفاوت باشد
         this.updateStaticSlides();
 
-        // this._containStaticSlides();
+        this._containStaticSlides();
 
         // // update slidesWidth
         // this.slidesWidth = len ? this.getLastSlide().target - this.slides[0].target : 0;
     };
 
     proto._containStaticSlides = function () {
-        // 
+        if (!this.options.contain || this.options.wrapAround || !this.cards.length) {
+            return;
+        }
+        var contentWidth = this.slideableWidth,
+            isContentSmaller = contentWidth < this.viewportWidth;
+
+        if (!isContentSmaller) {
+            // content is less than gallery size
+            var lastSelectableCard = this.cards[this.lastIndex];
+            for (var i = 1; i < this.staticSlides.length; i++) {
+                // ممکن است چند اسلاید وجود داشته باشند که همگی در صفحه آخر اسلایدر جای گرفته باشند
+                // (زمانی که مقدار step عددی بیشتر از یک و کمتر از تعداد کارتهای یک صفحه باشد)
+                var stSlTrgt = this.staticSlides[i].target;
+                this.staticSlides[i].target = Math.min(stSlTrgt, lastSelectableCard.target);
+            }
+        }
     };
 
     proto.updateStaticSlides = function () {
@@ -3549,37 +3629,17 @@
             return;
         }
 
-        var staticSlide = new StaticSlide(this);
-        this.staticSlides.push(staticSlide);
+        var stSlSt_arr = this.staticSlidesStartIndexes;
+        for (var i = 0; i < stSlSt_arr.length; i++) {
+            var staticSlide = new StaticSlide(this);
+            this.staticSlides.push(staticSlide);
 
-        var isOriginLeft = this.originSide == 'left';
-        var endMargin = isOriginLeft ? 'marginRight' : 'marginLeft';
-
-        var canCardFit = this._getCanCardFit();
-
-        this.cards.forEach(function (card, i) {
-            // just add card if first card in staticSlide
-            if (!staticSlide.cards.length) {
-                staticSlide.addCard(card);
-                return;
-            }
-
-            var staticSlideNextWidth = (staticSlide.outerWidth - staticSlide.startMargin) + (card.width - card[endMargin]);
-
-            if (canCardFit.call(this, i, staticSlideNextWidth)) {
-                staticSlide.addCard(card);
-            } else {
-                // doesn't fit, new staticSlide
-                staticSlide.updateTarget();
-
-                staticSlide = new StaticSlide(this);
-                this.staticSlides.push(staticSlide);
+            for (var j = stSlSt_arr[i]; j < (stSlSt_arr[i+1] || this.cards.length); j++) {
+                var card = this.cards[j];
                 staticSlide.addCard(card);
             }
-        }, this);
-        // last staticSlide
-        staticSlide.updateTarget();
-
+            staticSlide.updateTarget();
+        }
         this.correctSelectedStaticSlideIndex();
         this.updateSelectedStaticSlide();
     };
@@ -3639,7 +3699,7 @@
 
     var updateInViewportCards = proto.updateInViewportCards;
     proto.updateInViewportCards = function () {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             updateInViewportCards.apply(this, arguments);
             return;
         }
@@ -3659,24 +3719,9 @@
         }
     };
 
-    proto._getCanCardFit = function () {
-        // var groupCards = this.options.groupCards;
-        var groupCards = this.options.fade;
-        if (!groupCards) {
-            return function () {
-                return false;
-            };
-        }
-        // default, group by width of staticSlide
-        return function (i, staticSlideNextWidth) {
-            // return staticSlideNextWidth <= ( this.size.innerWidth + 1 ) * percent;
-            return staticSlideNextWidth <= this.viewportWidth;
-        };
-    };
-
     var getIndexInRange = proto.getIndexInRange;
     proto.getIndexInRange = function (index) {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             return getIndexInRange.apply(this, arguments);
         }
         index = parseInt(+index) || 0;
@@ -3687,7 +3732,7 @@
 
     var select = proto.select;
     proto.select = function (slideIndex, isWrap, isInstant) {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             select.apply(this, arguments);
             return;
         }
@@ -3725,30 +3770,9 @@
         }
     };
 
-    var prev = proto.prev;
-    proto.prev = function () {
-        if (!this.options.fade) {
-            prev.apply(this, arguments);
-            return;
-        }
-        var index = -1 + this.selectedIndex;
-        this.select(index);
-    };
-
-    var next = proto.next;
-    proto.next = function () {
-        if (!this.options.fade) {
-            next.apply(this, arguments);
-            return;
-        }
-
-        var index = 1 + this.selectedIndex;
-        this.select(index);
-    };
-
     var selectInitialIndex = proto.selectInitialIndex;
     proto.selectInitialIndex = function () {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             selectInitialIndex.apply(this, arguments);
             return;
         }
@@ -3766,7 +3790,7 @@
 
     var dragEnd = proto.dragEnd;
     proto.dragEnd = function (event, pointer) {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             dragEnd.apply(this, arguments);
             return;
         }
@@ -3803,7 +3827,7 @@
 
     var getSlideDistance = proto.getSlideDistance;
     proto.getSlideDistance = function (x, index) {
-        if (!this.options.fade) {
+        if (!this.hasStaticSlide) {
             return getSlideDistance.apply(this, arguments);
         }
 
@@ -3934,9 +3958,7 @@
 
     proto.onSettleFade = function () {
         delete this.didDragEnd;
-        if (!this.options.fade) {
-            return;
-        }
+        
         // // set full and 0 opacity on selected & faded staticSlides
         // this.selectedStaticSlide.setOpacity(1);
         // var fadedStaticSlide = this.staticSlides[this.fadeIndex];
@@ -3953,15 +3975,10 @@
     };
 
     proto.onActivateFade = function () {
-        if (this.options.fade) {
-            this.element.classList.add('is-fade');
-        }
+        this.element.classList.add('is-fade');
     };
 
     proto.onDeactivateFade = function () {
-        if (!this.options.fade) {
-            return;
-        }
         this.element.classList.remove('is-fade');
         // reset opacity
         this.staticSlides.forEach(function (staticSlide) {
