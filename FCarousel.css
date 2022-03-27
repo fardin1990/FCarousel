@@ -14,8 +14,6 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-.f-carousel-enabled.is-draggable {
     cursor: move;
     /*cursor: w-resize;*/
     cursor: -webkit-grab;
