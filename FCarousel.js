@@ -943,6 +943,9 @@
 
         this.emitEvent("activate");
         this.selectInitialIndex();
+        
+        this.element.classList.add("f-carousel-enabled");
+
         // flag for initial activation, for using initialIndex
         this.isInitActivated = true;
         // // ready event. #493
@@ -3559,8 +3562,6 @@
         });
     };
 
-
-
     // ----- create ----- //
     FCarousel.createMethods.push('_createStaticSlides');
 
@@ -3822,6 +3823,11 @@
         this.isDragSelect = this.options.wrapAround;
         this.select(index);
         delete this.isDragSelect;
+
+        setTimeout(function () {
+            this.element.classList.remove("is-dragging");
+        }.bind(this));
+
         this.dispatchEvent('dragEnd', event, [pointer]);
     };
 
@@ -4346,7 +4352,8 @@
     // -------------------------- FCarousel -------------------------- //
     // ----- FCarousel defaults ----- //
     $.extend(FCarousel.defaults, {
-        lazyLoad: true,
+        // lazyLoad: true,
+        lazyLoad: 1,
         beforeLazyLoadPrepareClass: 'progressive pre-load',
         afterLazyLoadPrepareClass: 'progressive replace'
     });
