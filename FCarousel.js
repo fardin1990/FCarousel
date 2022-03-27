@@ -3250,7 +3250,7 @@
         var dot_index = this.dots.indexOf( target ),
             card_index;
 
-        if (!this.parent.staticSlides) {
+        if (!this.parent.hasStaticSlide) {
             card_index = this.parent.staticSlidesStartIndexes[dot_index];
         }
         else {
@@ -4254,7 +4254,7 @@
         this.on('pointerDown', this.stopPlayer);
         this.on('deactivate', this.deactivatePlayer);
         
-        this.on('settle', this.playPlayer);
+        this.on('settle', this.onSettlePlayer);
     };
 
     proto.activatePlayer = function () {
@@ -4263,6 +4263,12 @@
         }
         this.player.play();
         this.element.addEventListener('mouseenter', this);
+    };
+
+    proto.onSettlePlayer = function() {
+        if (this.player.state === "stopped") {
+            this.playPlayer();
+        }
     };
 
     // Player API, don't hate the ... thanks I know where the door is
