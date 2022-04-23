@@ -2,4 +2,4 @@
 
 FCarousel is created based on flickity.js (https://github.com/metafizzy/flickity) package with the goal of creating more and different capabilities.
 
-** note that this FCarousel needs jquery **
+** note that FCarousel needs jquery **
