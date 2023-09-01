@@ -717,6 +717,14 @@
         // this.getUsefulSizes();
     };
 
+    proto.destroy = function() {
+        // reset style
+        this.unselect();
+        this.element.style.position = '';
+        var side = this.parent.originSide;
+        this.element.style[ side ] = '';
+    };
+
     proto.setPosition = function (x) {
         // this.x = x;
         this.originalTarget = x;
@@ -843,9 +851,11 @@
             return instance;
         }
 
-        var setting = JSON.parse(element.dataset.carousel),
+        var inlineOptions = JSON.parse(element.dataset.carousel),
             defaults = $.extend({}, this.constructor.defaults);
-        this.options = $.extend(defaults, setting);
+        var elemOptions = $.extend(defaults, inlineOptions);
+
+        this.options = $.extend(elemOptions, options);
         this._create();
     };
     FCarousel.defaults = {
@@ -888,7 +898,7 @@
         $.extend(this.options, opts);
     };
     proto._create = function () {
-        // add id for FCarousel.data
+        // add id for FCarousel.getInstance
         var id = this.guid = ++GUID;
         this.element.fCarouselGUID = id; // expando
         instances[id] = this; // associate via id
@@ -1361,7 +1371,7 @@
         * get cards adjacent to a slide
         * @param {Integer} adjCount - number of adjacent slides
         * @param {Integer} index - index of slide to start
-        * @returns {Array} cards - array of Flickity.Cards
+        * @returns {Array} cards - array of FCarousel.Cards
         */
     proto.getAdjacentCardElements = function (adjCount, index) {
         adjCount = adjCount || 0;
@@ -1567,6 +1577,37 @@
         // contain slides target
         this._containSlides();
     };
+    
+    // ----- destroy ----- //
+    // deactivate all FCarousel functionality, but keep stuff available
+    proto.deactivate = function() {
+        if ( !this.isActive ) {
+            return;
+        }
+        this.element.classList.remove("f-carousel-enabled");
+        this.unselectSelectedCard();
+        // destroy cards
+        this.cards.forEach( function(card) {
+            card.destroy();
+        });
+        if ( this.options.accessibility ) {
+            this.element.removeAttribute('tabIndex');
+            this.element.removeEventListener('keydown', this);
+        }
+        // set flags
+        this.isActive = false;
+        this.emitEvent('deactivate');
+    };
+  
+    proto.destroy = function() {
+        this.select(0, false, true);
+        this.deactivate();
+        window.removeEventListener( 'resize', this );
+        this.allOff();
+        this.emitEvent('destroy');
+        delete this.element.fCarouselGUID;
+        delete instances[this.guid];
+    };
 
     // ----- focus ----- //
     proto.focus = function () {
@@ -1589,10 +1630,15 @@
         * @param {Element} elem
         * @returns {FCarousel}
         */
-    FCarousel.data = function (elem) {
+    // FCarousel.data = function (elem) {
+    FCarousel.getInstance = function (elem) {
         elem = utils.getQueryElement(elem);
         var id = elem && elem.fCarouselGUID;
-        return id && instances[id];
+        return id ? instances[id] : null;
+    };
+    
+    FCarousel.getAllInstances = function () {
+        return instances;
     };
 
 
@@ -3006,6 +3052,14 @@
         // this.parent.element.appendChild(this.element);
     };
 
+    PrevNextBtn.prototype.deactivate = function() {
+        // remove from DOM
+        // this.parent.element.removeChild( this.element );
+        // click events
+        this.unbindStartEvent(this.element);
+        this.element.removeEventListener('click', this);
+    };
+
     PrevNextBtn.prototype.handleEvent = utils.handleEvent;
 
     PrevNextBtn.prototype.onclick = function () {
@@ -3351,7 +3405,7 @@
 
     proto.setNavCompanion = function (elem) {
         elem = utils.getQueryElement(elem);
-        var companion = FCarousel.data(elem);
+        var companion = FCarousel.getInstance(elem);
         // stop if no companion or companion is self
         if (!companion || companion == this) {
             return;
@@ -4423,10 +4477,11 @@
     return FCarousel;
 }));
 
+
 // create carosels
 (function (utils) {
-    var my_carousels = $(".f-carousel");
-    my_carousels = utils.makeArray(my_carousels).map(function (carousel) {
+    var carousels = $("[data-carousel]");
+    utils.makeArray(carousels).map(function (carousel) {
         return new FCarousel(carousel);
     });
 })(window.utils);

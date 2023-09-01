@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>FCarousel || Create any type of sliders</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='assets/bootstrap/css/bootstrap.min.css'>
+
+    <link rel='stylesheet' type='text/css' media='screen' href='../FCarousel.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='../styles-2.css'>
+    <link rel="stylesheet" type="text/css" media="screen" href="../carousel-gallery-etc.css">
+</head>
+<body class="rtl">
+    <div class="auto-container">
+        <main class="mainContent my-5">
+            <section class="slider-cards-list">
+                <div class="slideshow-container draggable bg-white edged cor-rad-med box-padding" >
+                    <div class="section-heading">
+                        <h2 class="heading line-aftr">ابزارهای پرفروش</h2>
+                        <span class="more-info-link pos-vr-center">
+                            <a href="#">مشاهده همه  &gt;</a>
+                        </span>
+                    </div>
+                    <div id="sample_carousel_1" class="f-carousel" data-carousel='{"rightBtnIcon": "icon icon-arr_right", "leftBtnIcon": "icon icon-arr_left", "draggable": ">1", "freeScroll": true}'>
+                        <div class="slider-cards-container">
+                            <div class="f-carousel-items cards-wrapper">
+                                <div class="cards-temp-placeholder" data-type="img-content" data-items-info='' data-carousel-lazyload=false></div>
+                            </div>
+                        </div>
+                        <button class="carousel-control carousel-control-prev" title="قبلی">
+                            <span class="icon icon-arr_right"></span>
+                        </button>
+                        <button class="carousel-control carousel-control-next" title="بعدی">
+                            <span class="icon icon-arr_left"></span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card bg-white edged cor-rad-med box-padding" dir="ltr">
+                <form id="controlOptionForm">
+                    <div class="py-2 d-flex justify-content-between">
+                        <h2>
+                            FCarousel Options:
+                        </h2>
+                        <span>
+                            <button type="button" id="resetOptionsBtn">
+                                reset all changes
+                            </button>
+                            <!-- <button type="button" id="reRunBtn">
+                                run again
+                            </button> -->
+                        </span>
+                    </div>
+                    <div class="row mb-3">
+                        <!-- <div class="col">
+                            <label>
+                                rtl page
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="" />
+                            </div>
+                        </div> -->
+                        <div class="col">
+                            <label>
+                                cardAlign
+                            </label>
+                            <div>
+                                <label>
+                                    <span>
+                                        left
+                                    </span>
+                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="left" />
+                                </label>
+                                <label>
+                                    <span>
+                                        center
+                                    </span>
+                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="center" />
+                                </label>
+                                <label>
+                                    <span>
+                                        right
+                                    </span>
+                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="right" />
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                right to left
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="rtl" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                friction 
+                            </label>
+                            <div>
+                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="friction" value="0.28" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                free scroll friction
+                            </label>
+                            <div>
+                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="freeScrollFriction" value="0.075" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                selected attraction
+                            </label>
+                            <div>
+                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="selectedAttraction" value="0.025" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                discrete placement
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="discretePlacement" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                wrap around
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="wrapAround" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                scrollbar
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="scrollbar" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                scrollbar mutual control
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="scrollbarMutualControl" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                contain
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="contain" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                step
+                            </label>
+                            <div>
+                                <label>
+                                    <span>
+                                        choose a number
+                                    </span>
+                                    <input type="radio" name="stepType" class="" data-option-control="step" value="" checked />
+                                    <input type="number" min="1" class="" data-option-control="step" value="1" />
+                                </label>
+                                <label>
+                                    <span>
+                                        page
+                                    </span>
+                                    <input type="radio" name="stepType" class="" data-option-control="step" value="page" />
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                on steps placement
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="onStepsPlacement" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                initial index
+                            </label>
+                            <div>
+                                <input type="number" min="0" class="" data-option-control="initialIndex" value="0" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                free scroll
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="freeScroll" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                non uniSize
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="nonUniSize" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                accessibility
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="accessibility" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>
+                                adaptive height
+                            </label>
+                            <div>
+                                <input type="checkbox" class="" data-option-control="adaptiveHeight" />
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label>
+                                set gallery size
+                            </label>
+                            <div>
+                                <input type="checkbox" checked="checked" class="" data-option-control="setGallerySize" />
+                            </div>
+                        </div>
+                        <!-- <div class="col">
+                            <label>
+                                card selector
+                            </label>
+                            <div>
+                                <input type="text" class="" data-option-control="cardSelector" value="" />
+                            </div>
+                        </div> -->
+                    </div>
+                    <!-- <div class="pt-4 pb-3">
+                        <button>
+                            Apply Changes
+                        </button>
+                    </div> -->
+                </form>
+            </section>
+        </main>
+    </div>
+
+    
+    <script src='../jquery-3.4.1.min.js'></script>
+
+    <script src="js/site.js"></script>
+
+    <script src="../cardsHtmlCreator.js"></script>
+
+    <!-- <script src='../progressive-image.js'></script> -->
+    <script src='../progressive-image-from-es-16-9-1400.js'></script>
+    <!-- <script src='../progressive-image-from-oH-16-9-1400.js'></script> -->
+
+    <script src="../CSS.supports.js"></script>
+    
+    <!-- <script src='../scripts.js'></script> -->
+    <script src='../FCarousel.js'></script>
+</body>
+</html>

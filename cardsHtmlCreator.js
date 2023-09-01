@@ -4,21 +4,21 @@ createCardElems();
 function createCardElems() {
     var allCardPlh = $(".cards-temp-placeholder");
     var imagesUrlList = [
-        'images/186x167/image-1.jpg',
-        'images/186x167/image-2.jpg',
-        'images/186x167/image-3.jpg',
-        'images/186x167/image-4.jpg',
-        'images/186x167/image-5.jpg',
-        'images/186x167/image-6.jpg',
-        'images/186x167/image-7.jpg',
-        'images/186x167/image-8.jpg',
-        'images/186x167/image-9.jpg',
-        'images/186x167/image-10.jpg',
-        'images/186x167/image-11.jpg',
-        'images/186x167/image-12.jpg',
-        'images/186x167/image-13.jpg',
-        'images/186x167/image-14.jpg',
-        'images/186x167/image-15.png'
+        '../images/186x167/image-1.jpg',
+        '../images/186x167/image-2.jpg',
+        '../images/186x167/image-3.jpg',
+        '../images/186x167/image-4.jpg',
+        '../images/186x167/image-5.jpg',
+        '../images/186x167/image-6.jpg',
+        '../images/186x167/image-7.jpg',
+        '../images/186x167/image-8.jpg',
+        '../images/186x167/image-9.jpg',
+        '../images/186x167/image-10.jpg',
+        '../images/186x167/image-11.jpg',
+        '../images/186x167/image-12.jpg',
+        '../images/186x167/image-13.jpg',
+        '../images/186x167/image-14.jpg',
+        '../images/186x167/image-15.png'
     ];
     
     $(allCardPlh).each(function () {
@@ -65,7 +65,7 @@ function createCardElems() {
 
             cards_html +=               '<div class="card-img-cont"> \n' +
                                             '<a href="#" class="progressive ' + lazyLoadingClass + '" data-href="' + img_url + '"> \n' +
-                                                '<img src="images/default-placeholder-186x167.png" class="preview" alt="" width="186" height="167" /> \n' +
+                                                '<img src="../images/default-placeholder-186x167.png" class="preview" alt="" width="186" height="167" /> \n' +
                                             '</a> \n' +
                                         '</div> \n';
             
