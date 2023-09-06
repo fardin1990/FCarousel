@@ -227,7 +227,7 @@
 (function (window, factory) {
     // window.getSize = factory();
     window.getElemSize = factory(window.utils);
-}(window, function (utils) {
+})(window, function (utils) {
     // var getElemSize = {};
     function getElemSize() { }
 
@@ -272,7 +272,10 @@
             paddingRight = parseFloat(style.paddingRight),
             paddingLeft = parseFloat(style.paddingLeft);
 
-        return elem.clientWidth - (paddingRight + paddingLeft);
+        // return elem.clientWidth - (paddingRight + paddingLeft);
+        // clientWidth rounds the width number down
+
+        return Math.ceil(elem.getBoundingClientRect().width) - (paddingRight + paddingLeft);
     };
     proto.getOuterWidth = function (elem) {
         elem = utils.getQueryElement(elem);
@@ -284,7 +287,10 @@
             marginRight = parseFloat(style.marginRight),
             marginLeft = parseFloat(style.marginLeft);
 
-        return elem.offsetWidth + marginRight + marginLeft;
+        // return elem.offsetWidth + marginRight + marginLeft;
+        // offsetWidth rounds the width number down
+
+        return Math.ceil(elem.getBoundingClientRect().width) + marginRight + marginLeft;
     };
     proto.getInnerHeight = function (elem) {
         elem = utils.getQueryElement(elem);
@@ -296,7 +302,10 @@
             paddingTop = parseFloat(style.paddingTop),
             paddingBottom = parseFloat(style.paddingBottom);
 
-        return elem.clientHeight - (paddingTop + paddingBottom);
+        // return elem.clientHeight - (paddingTop + paddingBottom);
+        // clientHeight rounds the height number down
+
+        return Math.ceil(elem.getBoundingClientRect().height) - (paddingTop + paddingBottom);
     };
     proto.getOuterHeight = function (elem) {
         elem = utils.getQueryElement(elem);
@@ -308,7 +317,10 @@
             marginTop = parseFloat(style.marginTop),
             marginBottom = parseFloat(style.marginBottom);
 
-        return elem.offsetHeight + marginTop + marginBottom;
+        // return elem.offsetHeight + marginTop + marginBottom;
+        // offsetHeight rounds the height number down
+
+        return Math.ceil(elem.getBoundingClientRect().height) + marginTop + marginBottom;
     };
 
     // -------------------------- getSize -------------------------- //
@@ -365,7 +377,7 @@
     };
 
     return getElemSize;
-}));
+});
 
 // global drag animate (for Carousel & Scrollbar handle)
 (function (window, factory) {
@@ -853,6 +865,8 @@
 
         var inlineOptions = JSON.parse(element.dataset.carousel),
             defaults = $.extend({}, this.constructor.defaults);
+        defaults.rightToLeft = this.checkDirectionIsRtl();
+
         var elemOptions = $.extend(defaults, inlineOptions);
 
         this.options = $.extend(elemOptions, options);
@@ -860,7 +874,7 @@
     };
     FCarousel.defaults = {
         cardAlign: "right",
-        rightToLeft: true,
+        // rightToLeft: false,
         friction: 0.28,          // friction when selecting
         freeScrollFriction: 0.075, // friction when free-scrolling
         selectedAttraction: 0.025,
@@ -950,6 +964,10 @@
             // listen for key presses
             this.element.addEventListener("keydown", this);
         }
+        else {
+            // this.element.tabIndex = -1;
+            this.element.removeAttribute('tabIndex');
+        }
 
         this.emitEvent("activate");
         this.selectInitialIndex();
@@ -960,6 +978,9 @@
         this.isInitActivated = true;
         // // ready event. #493
         // this.dispatchEvent('ready');
+    };
+    proto.checkDirectionIsRtl = function () {
+        return window.getComputedStyle(this.element).direction === "rtl";
     };
     proto.addViewport = function () {
         var selector = this.constructor.selectors.viewport,
@@ -993,11 +1014,24 @@
         this.cardAlign = shorthand[this.originSide];
         this.cursorPosition = this.viewportWidth * this.cardAlign;
     };
+    proto.getInViewportCardsMaxHeight = function () {
+        var maxHeight = 0;
+        this.inViewportCards?.forEach(card => {
+            maxHeight = Math.max(maxHeight, card.height);
+        });
+        return maxHeight;
+    };
     proto.setGallerySize = function () {
-        if (this.options.setGallerySize || this.hasStaticSlide) {
-            var height = this.options.adaptiveHeight && this.selectedStaticSlide ?
-                this.selectedStaticSlide.height : this.maxCardHeight;
+        if (this.options.setGallerySize) {
+            var height = this.options.adaptiveHeight
+                    ? this.selectedStaticSlide
+                        ? this.selectedStaticSlide.height
+                        : this.getInViewportCardsMaxHeight()
+                    : this.maxCardHeight;
             this.viewport.style.height = height + 'px';
+        }
+        else {
+            this.viewport.style.height = '';
         }
     };
     proto.identifyCards = function () {
@@ -1188,9 +1222,9 @@
             this.startAnimation();
         }
 
-        // if ( this.options.adaptiveHeight ) {
-        //   this.setGallerySize();
-        // }
+        if ( this.options.adaptiveHeight ) {
+          this.setGallerySize();
+        }
         // events
         this.dispatchEvent('select', null, [slideIndex]);
         // change event if new index
@@ -1676,7 +1710,7 @@
         );
     }
 
-}(window, function factory(window, EvEmitter) {
+})(window, function factory(window, EvEmitter) {
 
     function noop() { }
 
@@ -1941,7 +1975,7 @@
 
     return Unipointer;
 
-}));
+});
 
 /*!
  * Unidragger v2.3.0
@@ -1974,7 +2008,7 @@
         );
     }
 
-}(window, function factory(window, Unipointer) {
+})(window, function factory(window, Unipointer) {
 
     // -------------------------- Unidragger -------------------------- //
 
@@ -2217,7 +2251,7 @@
 
     return Unidragger;
 
-}));
+});
 
 // drag
 (function (window, factory) {
@@ -2604,7 +2638,7 @@
 //FCarousel scroll handle
 (function (window, factory) {
     factory(window, window.utils, window.FCarousel, window.dragAnimatePrototype, window.Unidragger);
-}(window, function (window, utils, FCarousel, animatePrototype, Unidragger) {
+})(window, function (window, utils, FCarousel, animatePrototype, Unidragger) {
     var ScrollHandle = function (parent) {
         this.parent = this.positioningCompanion = parent;
         this._create();
@@ -2960,12 +2994,12 @@
 
     FCarousel.ScrollHandle = ScrollHandle;
     return FCarousel;
-}));
+});
 
 //FCarousel previouse and next button
 (function (window, factory) {
     factory(window, window.FCarousel, window.Unipointer, window.utils);
-}(window, function (window, FCarousel, Unipointer, utils) {
+})(window, function (window, FCarousel, Unipointer, utils) {
     var PrevNextBtn = function (direction, parent) {
         this.parent = parent;
         this.direction = direction;
@@ -3146,7 +3180,7 @@
 
     FCarousel.PrevNextBtn = PrevNextBtn;
     return FCarousel;
-}));
+});
 
 // page dots
 ( function( window, factory ) {
@@ -3157,7 +3191,7 @@
         window.Unipointer,
         window.utils
     );
-}( window, function factory( window, FCarousel, Unipointer, utils ) {
+})( window, function factory( window, FCarousel, Unipointer, utils ) {
   
     // -------------------------- PageDots -------------------------- //
     
@@ -3366,7 +3400,7 @@
     
     return FCarousel;
     
-}));
+});
 
 /*!
  * FCarousel asNavFor
@@ -3379,7 +3413,7 @@
         window.FCarousel,
         window.utils
     );
-}(window, function factory(FCarousel, utils) {
+})(window, function factory(FCarousel, utils) {
 
     // -------------------------- asNavFor prototype -------------------------- //
     // FCarousel.defaults.asNavFor = null;
@@ -3539,7 +3573,7 @@
 
     // -----  ----- //
     return FCarousel;
-}));
+});
 
 // steady (static) slide
 (function (window, factory) {
@@ -3547,7 +3581,7 @@
     window.FCarousel = window.FCarousel || {};
     window.FCarousel.StaticSlide = factory(window, window.utils, window.getPosition);
 
-}(window, function factory(window, utils, getPosition) {
+})(window, function factory(window, utils, getPosition) {
     'use strict';
 
     function StaticSlide(parent) {
@@ -3814,9 +3848,9 @@
             this.startAnimation();
         }
 
-        // if ( this.options.adaptiveHeight ) {
-        //   this.setGallerySize();
-        // }
+        if ( this.options.adaptiveHeight ) {
+          this.setGallerySize();
+        }
         // events
         this.dispatchEvent('select', null, [slideIndex]);
         // change event if new index
@@ -3907,7 +3941,7 @@
     };
 
     return StaticSlide;
-}));
+});
 
 /**
  * FCarousel fade v1.0.0
@@ -3921,7 +3955,7 @@
         window.utils
     );
 
-}(this, function factory(FCarousel, utils) {
+})(this, function factory(FCarousel, utils) {
 
     // ---- StaticSlide ---- //
     var StaticSlide = FCarousel.StaticSlide;
@@ -4189,7 +4223,7 @@
     };
 
     return FCarousel;
-}));
+});
 
 // player & autoPlay
 (function (window, factory) {
@@ -4199,7 +4233,7 @@
         window.utils,
         window.FCarousel
     );
-}(window, function factory(EvEmitter, utils, FCarousel) {
+})(window, function factory(EvEmitter, utils, FCarousel) {
 
     // -------------------------- Player -------------------------- //
     function Player(parent) {
@@ -4371,7 +4405,7 @@
 
     return FCarousel;
 
-}));
+});
 
 // ready for lazyload
 (function (window, factory) {
@@ -4381,7 +4415,7 @@
         window.FCarousel,
         window.utils
     );
-}(window, function factory(window, FCarousel, utils) {
+})(window, function factory(window, FCarousel, utils) {
     'use strict';
 
     // -------------------------- LazyLoadPreparer -------------------------- //
@@ -4475,7 +4509,7 @@
     FCarousel.LazyLoadPreparer = LazyLoadPreparer;
 
     return FCarousel;
-}));
+});
 
 
 // create carosels

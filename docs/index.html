@@ -14,7 +14,7 @@
 <body class="rtl">
     <div class="auto-container">
         <main class="mainContent my-5">
-            <section class="slider-cards-list">
+            <section id="sample_carousel_1_section" class="slider-cards-list">
                 <div class="slideshow-container draggable bg-white edged cor-rad-med box-padding" >
                     <div class="section-heading">
                         <h2 class="heading line-aftr">ابزارهای پرفروش</h2>
@@ -22,7 +22,7 @@
                             <a href="#">مشاهده همه  &gt;</a>
                         </span>
                     </div>
-                    <div id="sample_carousel_1" class="f-carousel" data-carousel='{"rightBtnIcon": "icon icon-arr_right", "leftBtnIcon": "icon icon-arr_left", "draggable": ">1", "freeScroll": true}'>
+                    <div id="sample_carousel_1" class="f-carousel my-3" data-carousel='{"rightBtnIcon": "icon icon-arr_right", "leftBtnIcon": "icon icon-arr_left", "draggable": ">1", "freeScroll": true}'>
                         <div class="slider-cards-container">
                             <div class="f-carousel-items cards-wrapper">
                                 <div class="cards-temp-placeholder" data-type="img-content" data-items-info='' data-carousel-lazyload=false></div>
@@ -48,20 +48,12 @@
                             <button type="button" id="resetOptionsBtn">
                                 reset all changes
                             </button>
-                            <!-- <button type="button" id="reRunBtn">
+                            <button type="button" id="reRunBtn">
                                 run again
-                            </button> -->
+                            </button>
                         </span>
                     </div>
                     <div class="row mb-3">
-                        <!-- <div class="col">
-                            <label>
-                                rtl page
-                            </label>
-                            <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="" />
-                            </div>
-                        </div> -->
                         <div class="col">
                             <label>
                                 cardAlign
@@ -71,19 +63,19 @@
                                     <span>
                                         left
                                     </span>
-                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="left" />
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="left" data-rerun />
                                 </label>
                                 <label>
                                     <span>
                                         center
                                     </span>
-                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="center" />
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="center" data-rerun />
                                 </label>
                                 <label>
                                     <span>
                                         right
                                     </span>
-                                    <input type="radio" name="cardAlign" class="" data-option-control="cardAlign" value="right" />
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="right" data-rerun checked />
                                 </label>
                             </div>
                         </div>
@@ -92,7 +84,7 @@
                                 right to left
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="rtl" />
+                                <input type="checkbox" data-option-control="rightToLeft" data-rerun checked />
                             </div>
                         </div>
                     </div>
@@ -102,7 +94,7 @@
                                 friction 
                             </label>
                             <div>
-                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="friction" value="0.28" />
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="friction" value="0.28" />
                             </div>
                         </div>
                         <div class="col">
@@ -110,7 +102,7 @@
                                 free scroll friction
                             </label>
                             <div>
-                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="freeScrollFriction" value="0.075" />
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="freeScrollFriction" value="0.075" />
                             </div>
                         </div>
                         <div class="col">
@@ -118,7 +110,7 @@
                                 selected attraction
                             </label>
                             <div>
-                                <input type="range" min="0" max="1" step="0.005" class="" data-option-control="selectedAttraction" value="0.025" />
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="selectedAttraction" value="0.025" />
                             </div>
                         </div>
                     </div>
@@ -128,7 +120,7 @@
                                 discrete placement
                             </label>
                             <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="discretePlacement" />
+                                <input type="checkbox" data-option-control="discretePlacement" checked />
                             </div>
                         </div>
                         <div class="col">
@@ -136,7 +128,7 @@
                                 wrap around
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="wrapAround" />
+                                <input type="checkbox" data-option-control="wrapAround" />
                             </div>
                         </div>
                         <div class="col">
@@ -144,7 +136,7 @@
                                 scrollbar
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="scrollbar" />
+                                <input type="checkbox" data-option-control="scrollbar" />
                             </div>
                         </div>
                     </div>
@@ -154,7 +146,7 @@
                                 scrollbar mutual control
                             </label>
                             <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="scrollbarMutualControl" />
+                                <input type="checkbox" data-option-control="scrollbarMutualControl" checked />
                             </div>
                         </div>
                         <div class="col">
@@ -162,7 +154,7 @@
                                 contain
                             </label>
                             <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="contain" />
+                                <input type="checkbox" data-option-control="contain" data-rerun checked />
                             </div>
                         </div>
                     </div>
@@ -176,14 +168,14 @@
                                     <span>
                                         choose a number
                                     </span>
-                                    <input type="radio" name="stepType" class="" data-option-control="step" value="" checked />
-                                    <input type="number" min="1" class="" data-option-control="step" value="1" />
+                                    <input type="radio" name="stepType" data-option-control="step" checked />
+                                    <input type="number" min="1" data-option-control="step" value="1" />
                                 </label>
                                 <label>
                                     <span>
                                         page
                                     </span>
-                                    <input type="radio" name="stepType" class="" data-option-control="step" value="page" />
+                                    <input type="radio" name="stepType" data-option-control="step" value="p" />
                                 </label>
                             </div>
                         </div>
@@ -192,7 +184,7 @@
                                 on steps placement
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="onStepsPlacement" />
+                                <input type="checkbox" data-option-control="onStepsPlacement" data-rerun />
                             </div>
                         </div>
                         <div class="col">
@@ -200,7 +192,7 @@
                                 initial index
                             </label>
                             <div>
-                                <input type="number" min="0" class="" data-option-control="initialIndex" value="0" />
+                                <input type="number" min="0" data-option-control="initialIndex" value="0" data-rerun />
                             </div>
                         </div>
                     </div>
@@ -210,7 +202,7 @@
                                 free scroll
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="freeScroll" />
+                                <input type="checkbox" data-option-control="freeScroll" checked />
                             </div>
                         </div>
                         <div class="col">
@@ -218,7 +210,7 @@
                                 non uniSize
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="nonUniSize" />
+                                <input type="checkbox" data-option-control="nonUniSize" data-rerun />
                             </div>
                         </div>
                         <div class="col">
@@ -226,7 +218,7 @@
                                 accessibility
                             </label>
                             <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="accessibility" />
+                                <input type="checkbox" data-option-control="accessibility" data-rerun />
                             </div>
                         </div>
                     </div>
@@ -236,7 +228,7 @@
                                 adaptive height
                             </label>
                             <div>
-                                <input type="checkbox" class="" data-option-control="adaptiveHeight" />
+                                <input type="checkbox" data-option-control="adaptiveHeight" data-rerun />
                             </div>
                         </div>
                         <div class="col">
@@ -244,7 +236,7 @@
                                 set gallery size
                             </label>
                             <div>
-                                <input type="checkbox" checked="checked" class="" data-option-control="setGallerySize" />
+                                <input type="checkbox" data-option-control="setGallerySize" data-rerun checked />
                             </div>
                         </div>
                         <!-- <div class="col">
@@ -252,15 +244,10 @@
                                 card selector
                             </label>
                             <div>
-                                <input type="text" class="" data-option-control="cardSelector" value="" />
+                                <input type="text" data-option-control="cardSelector" value="" />
                             </div>
                         </div> -->
                     </div>
-                    <!-- <div class="pt-4 pb-3">
-                        <button>
-                            Apply Changes
-                        </button>
-                    </div> -->
                 </form>
             </section>
         </main>

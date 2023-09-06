@@ -1,7 +1,5 @@
-// const FCarousel = require("../../FCarousel");
 
-
-var getCurrentCustomOptions = function () {
+function getCurrentCustomOptions() {
     // var optionKeys = [
     //     "cardAlign",
     //     "rightToLeft",
@@ -33,7 +31,50 @@ var getCurrentCustomOptions = function () {
         var targetInput = controlOptionInputs[i];
         var optKey = $(targetInput).data("option-control");
 
-        if (optKey !== "step") {
+        if (optKey === "nonUniSize") {
+            var carouselCards = $("#sample_carousel_1").find(".item");
+            if ($(targetInput)[0].checked) {
+                $(carouselCards).each(function () {
+                    var cardInnerElem = $(this).find(".card-inner")[0];
+                    var randomWidth = getRandomArbitrary(0.3, 1.7);
+                    $(cardInnerElem).css("width", "");
+                    $(cardInnerElem).css("min-width", "");
+                    var realCardWidth = $(cardInnerElem).outerWidth();
+                    $(cardInnerElem).css("width", randomWidth * realCardWidth + "px");
+                    $(cardInnerElem).css("min-width", randomWidth * realCardWidth + "px");
+                });
+            }
+            else {
+                $(carouselCards).each(function () {
+                    var cardInnerElem = $(this).find(".card-inner")[0];
+                    $(cardInnerElem).css("width", "");
+                    $(cardInnerElem).css("min-width", "");
+                });
+            }
+        }
+
+        if (optKey === "step") {
+            var stepNumberInput = $("[data-option-control='step'][type='number']")[0];
+
+            if ($(targetInput).val() === "p" && $(targetInput)[0].checked) {
+                $(stepNumberInput).attr("disabled", "");
+                options.step = $(targetInput).val();
+            }
+            else {
+                $(stepNumberInput).removeAttr("disabled");
+                options.step = $(stepNumberInput).val();
+            }
+        }
+        else if (optKey === "rightToLeft") {
+            var parentSection = $("#sample_carousel_1_section")[0];
+            if ($(targetInput)[0].checked) {
+                $(parentSection).css("direction", "rtl");
+            }
+            else {
+                $(parentSection).css("direction", "ltr");
+            }
+        }
+        else {
             if ($(targetInput).attr("type") === "text" || $(targetInput).attr("type") === "number" || $(targetInput).attr("type") === "range") {
                 options[optKey] = $(targetInput).val();
             }
@@ -44,54 +85,54 @@ var getCurrentCustomOptions = function () {
                 options[optKey] = $(targetInput).attr("value");
             }
         }
-        else {
-            var stepNumberInput = $("[data-option-control='step'][type='number']")[0];
-
-            if ($(targetInput).val() === "page") {
-                $(stepNumberInput).attr("disabled", "");
-                options.step = "page";
-            }
-            else {
-                $(stepNumberInput).removeAttr("disabled");
-                options.step = $(stepNumberInput).val();
-            }
-        }
     }
 
     return options;
 }
 
+function reRunCarousel(carouselElem) {
+    var carouselInstance = FCarousel.getInstance(carouselElem);
+    carouselInstance.destroy();
+    changeCarouselOptions(carouselElem);
+}
+
+function changeCarouselOptions(carouselElem) {
+    var customOptions = getCurrentCustomOptions();
+    new FCarousel(carouselElem, customOptions);
+}
+
+function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+
 $(document).ready(function () {
     var sampleCarouselElem = $("#sample_carousel_1")[0];
-
     var controlOptionFormElem = $("#controlOptionForm")[0];
     var controlOptionInputs = $(controlOptionFormElem).find("[data-option-control]");
-
-    sampleCarouselInstance = FCarousel.getInstance(sampleCarouselElem);
-
 
     $(controlOptionInputs).on("change", function (event) {
         if (typeof FCarousel !== "function") {
             return;
         }
-        // var targetInput = event?.target;
-        var customOptions = getCurrentCustomOptions();
-
         // first destroy in order to reset all changes (sush as slider transform)
         // TODO: do something for reseting images load for seeing lazyload effect
-        new FCarousel(sampleCarouselElem, customOptions);
+
+        if ($(event.target).data("rerun") !== undefined) {
+            reRunCarousel(sampleCarouselElem);
+        }
+        else {
+            changeCarouselOptions(sampleCarouselElem);
+        }
     });
 
     $("#resetOptionsBtn").on("click", function () {
         $(controlOptionFormElem)[0].reset();
-        var customOptions = getCurrentCustomOptions();
-        new FCarousel(sampleCarouselElem, customOptions);
+        changeCarouselOptions(sampleCarouselElem);
     });
 
     $("#reRunBtn").on("click", function () {
-        sampleCarouselInstance.destroy();
-        var customOptions = getCurrentCustomOptions();
-        new FCarousel(sampleCarouselElem, customOptions);
+        reRunCarousel(sampleCarouselElem);
     });
 });
 

@@ -199,11 +199,8 @@ img {
     left: 8px;
 }
 .slider-cards-container {
-    /* margin: 8px 22px 2px; */
-    /* padding: 5px 0 4px; */
-    margin: 0 20px;
-    /* padding: 13px 6px 10px; */
-    padding: 13px 0 10px;
+    padding: 0 1px;
+    margin: 0 19px;
 }
 .cards-wrapper .card {
     display: inline-block;
