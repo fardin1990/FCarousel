@@ -4,21 +4,27 @@ createCardElems();
 function createCardElems() {
     var allCardPlh = $(".cards-temp-placeholder");
     var imagesUrlList = [
-        'assets/images/186x167/image-1.jpg',
-        'assets/images/186x167/image-2.jpg',
-        'assets/images/186x167/image-3.jpg',
-        'assets/images/186x167/image-4.jpg',
-        'assets/images/186x167/image-5.jpg',
-        'assets/images/186x167/image-6.jpg',
-        'assets/images/186x167/image-7.jpg',
-        'assets/images/186x167/image-8.jpg',
-        'assets/images/186x167/image-9.jpg',
-        'assets/images/186x167/image-10.jpg',
-        'assets/images/186x167/image-11.jpg',
-        'assets/images/186x167/image-12.jpg',
-        'assets/images/186x167/image-13.jpg',
-        'assets/images/186x167/image-14.jpg',
-        'assets/images/186x167/image-15.png'
+        'assets/images/sample-image-1.jpg',
+        'assets/images/sample-image-2.jpg',
+        'assets/images/sample-image-3.jpg',
+        'assets/images/sample-image-4.jpg',
+        'assets/images/sample-image-5.jpg',
+        'assets/images/sample-image-6.jpg',
+        'assets/images/sample-image-7.jpg',
+        'assets/images/sample-image-8.jpg',
+        'assets/images/sample-image-9.jpg',
+        'assets/images/sample-image-10.jpg',
+        'assets/images/sample-image-11.jpg',
+        'assets/images/sample-image-12.jpg',
+        'assets/images/sample-image-13.jpg',
+        'assets/images/sample-image-14.jpg',
+        'assets/images/sample-image-15.jpg',
+        'assets/images/sample-image-16.jpg',
+        'assets/images/sample-image-17.jpg',
+        'assets/images/sample-image-18.jpg',
+        'assets/images/sample-image-19.jpg',
+        'assets/images/sample-image-20.jpg',
+        'assets/images/sample-image-21.jpg'
     ];
     
     $(allCardPlh).each(function () {

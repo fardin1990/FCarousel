@@ -202,14 +202,20 @@ img {
     padding: 0 1px;
     margin: 0 19px;
 }
+.cards-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
 .cards-wrapper .card {
     display: inline-block;
     position: relative;
     direction: rtl;
     font-weight: 500;
     vertical-align: text-top;
+    width: 210px;
+    min-width: 210px;
     /* height: inherit; */
-    /* margin: 0 2px; */
+    margin: 0 8px;
 }
 
 
@@ -259,8 +265,6 @@ img {
     transform: translateY(-2px);
 }
 .slider-cards-list .card-inner {
-    width: 210px;
-    min-width: 210px;
     padding: 10px 12px 23px;
 }
 .card-img-cont {

@@ -1022,7 +1022,7 @@
         return maxHeight;
     };
     proto.setGallerySize = function () {
-        if (this.options.setGallerySize) {
+        if (this.options.setGallerySize || this.options.fade) {
             var height = this.options.adaptiveHeight
                     ? this.selectedStaticSlide
                         ? this.selectedStaticSlide.height
@@ -4103,7 +4103,7 @@
     };
 
     proto.fadeStaticSlides = function () {
-        if (this.staticSlides.length < 2) {
+        if (!this.staticSlides || this.staticSlides.length < 2) {
             return;
         }
 

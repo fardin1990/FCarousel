@@ -19,7 +19,24 @@ function getCurrentCustomOptions() {
     //     "accessibility",
     //     "adaptiveHeight",
     //     "setGallerySize",
-    //     "cardSelector"
+    //     "cardSelector",
+
+    //     "fade",
+    //     "draggable": ">1" | true | false,
+    //     "dragThreshold",
+    //     "minScrollThumbWidth",
+    //     "leftBtnIcon",
+    //     "rightBtnIcon",
+    //     "prevNextButtons",
+    //     "pageDots",
+    //     "asNavFor",
+    //     "autoPlay",
+    //     "pauseAutoPlayOnHover",
+    //     "lazyLoad",
+    //     "beforeLazyLoadPrepareClass",
+    //     "afterLazyLoadPrepareClass",
+
+    //     "namespaceJQueryEvents",
     // ];
 
     var options = {};
@@ -35,20 +52,20 @@ function getCurrentCustomOptions() {
             var carouselCards = $("#sample_carousel_1").find(".item");
             if ($(targetInput)[0].checked) {
                 $(carouselCards).each(function () {
-                    var cardInnerElem = $(this).find(".card-inner")[0];
+                    var cardElem = this;
                     var randomWidth = getRandomArbitrary(0.3, 1.7);
-                    $(cardInnerElem).css("width", "");
-                    $(cardInnerElem).css("min-width", "");
-                    var realCardWidth = $(cardInnerElem).outerWidth();
-                    $(cardInnerElem).css("width", randomWidth * realCardWidth + "px");
-                    $(cardInnerElem).css("min-width", randomWidth * realCardWidth + "px");
+                    $(cardElem).css("width", "");
+                    $(cardElem).css("min-width", "");
+                    var realCardWidth = $(cardElem).outerWidth();
+                    $(cardElem).css("width", randomWidth * realCardWidth + "px");
+                    $(cardElem).css("min-width", randomWidth * realCardWidth + "px");
                 });
             }
             else {
                 $(carouselCards).each(function () {
-                    var cardInnerElem = $(this).find(".card-inner")[0];
-                    $(cardInnerElem).css("width", "");
-                    $(cardInnerElem).css("min-width", "");
+                    var cardElem = this;
+                    $(cardElem).css("width", "");
+                    $(cardElem).css("min-width", "");
                 });
             }
         }
