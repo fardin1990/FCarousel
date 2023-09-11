@@ -37,16 +37,16 @@
 /* .f-carousel .f-carousel-items .item.active {
     display: block;
 } */
-.carousel-control.inactive {
+.car-control.inactive {
     opacity: 0.17 !important;
     cursor: default;
 }
-.carousel-control.inactive:hover .icon {
+.car-control.inactive:hover .icon {
     transform: scale(1) !important;
 }
 
 
-.f-carousel .carousel-control {
+.f-carousel .car-control {
     position: absolute;
     top: 50%;
     -webkit-transform: translateY(-50%);
@@ -68,40 +68,36 @@
     -ms-user-select: none;
     user-select: none;
 }
-.f-carousel .carousel-control.disabled,
-.f-carousel .carousel-control:disabled {
+.f-carousel .car-control.disabled,
+.f-carousel .car-control:disabled {
     opacity: 0.25 !important;
 }
 @media (prefers-reduced-motion: reduce) {
-    .f-carousel .carousel-control {
+    .f-carousel .car-control {
         transition: none;
     }
 }
-.f-carousel .carousel-control-prev {
+.f-carousel .car-control-prev {
     right: 0;
     left: auto;
-    padding-right: 5px;
-    border-radius: 0 3px 3px 0;
+    border-radius: 0 5px 5px 0;
 }
-.f-carousel .carousel-control-next {
+.f-carousel .car-control-next {
     left: 0;
     right: auto;
-    padding-right: 7px;
-    border-radius: 3px 0 0 3px;
+    border-radius: 5px 0 0 5px;
 }
-.f-carousel .carousel-control:focus,
-.f-carousel .carousel-control:hover {
+.f-carousel .car-control:focus,
+.f-carousel .car-control:hover {
     opacity: 0.9;
     text-decoration: none;
     outline: 0;
 }
-.f-carousel .carousel-control .icon {
-    display: inline-block;
+.f-carousel .car-control .icon {
     font-size: 1.5rem;
-    vertical-align: middle;
-    transition: all 0.3s;
+    display: inline-block;
 }
-.f-carousel .carousel-control:hover .icon {
+.f-carousel .car-control:hover .icon {
     transform: scale(1.2);
 }
 
@@ -147,12 +143,12 @@
 }
 
 
-.ltr .f-carousel .carousel-control-prev {
+.ltr .f-carousel .car-control-prev {
     right: auto;
     left: 0;
     border-radius: 3px 0 0 3px;
 }
-.ltr .f-carousel .carousel-control-next {
+.ltr .f-carousel .car-control-next {
     left: auto;
     right: 0;
     border-radius: 0 3px 3px 0;

@@ -927,6 +927,9 @@
         this.velocity = 0;
         this.originSide = this.options.rightToLeft ? 'right' : 'left';
 
+        var dirClass = this.options.rightToLeft ? 'is-rtl' : 'is-ltr';
+        this.element.classList.add(dirClass);
+
         // this.handles = [];
 
         // this.viewport = $(this.element).find(this.constructor.selectors.viewport)[0];
@@ -3016,8 +3019,8 @@
         this.isLeft = this.direction == leftDirection;
 
         // var element = this.element = document.createElement('button');
-        // element.className = 'carousel-control';
-        // element.className += this.isPrevious ? ' carousel-control-prev' : ' carousel-control-next';
+        // element.className = 'car-control';
+        // element.className += this.isPrevious ? ' car-control-prev' : ' car-control-next';
         // // prevent button from submitting form
         // element.setAttribute( 'type', 'button' );
 
@@ -3148,9 +3151,9 @@
         // }
     });
     $.extend(FCarousel.selectors, {
-        // controllButtons: ".carousel-control",
-        previousButton: ".carousel-control-prev",
-        nextButton: ".carousel-control-next"
+        // controllButtons: ".car-control",
+        previousButton: ".car-control-prev",
+        nextButton: ".car-control-next"
     });
 
     FCarousel.createMethods.push('_createPrevNextButtons');

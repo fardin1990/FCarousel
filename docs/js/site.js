@@ -60,57 +60,53 @@ function createCardElems() {
             
             var card_number = index + 1;
 
-            cards_html += '<div class="card item ' + card_class + '"> \n';
+            cards_html +=
+                '<div class="card item carousel-card' + ' ' + card_class + '"> \n';
             
             if (opts.type !== "image") {
-                cards_html +=   '<div class="card-outer"> \n' +
-                                    '<div class="card-inner"> \n';
+                cards_html +=
+                    '<div class="card-inner"> \n';
             }
 
-            cards_html +=               '<div class="card-img-cont"> \n' +
-                                            '<a href="#" class="progressive ' + lazyLoadingClass + '" data-href="' + img_url + '"> \n' +
-                                                '<img src="assets/images/default-placeholder-186x167.png" class="preview" alt="" width="186" height="167" /> \n' +
-                                            '</a> \n' +
-                                        '</div> \n';
+            cards_html +=
+                        '<div class="card-img-cont"> \n' +
+                            '<div class="progressive ' + lazyLoadingClass + '" data-href="' + img_url + '"> \n' +
+                                '<img src="assets/images/default-placeholder-186x167.png" class="preview" alt="" width="186" height="167" /> \n' +
+                            '</div> \n' +
+                        '</div> \n';
             
             if (opts.type == "img-content" || opts.type == "img-number-content") {
-                cards_html +=           '<div class="card-info"> \n' +
-                                            '<div> \n';
+                cards_html +=
+                        '<div class="card-info"> \n';
                     
                 if (opts.type == "img-number-content") {
-                    cards_html +=               '<div style="font-size: 2rem; color: red;"> \n' +
-                                                    card_number + ' \n' +
-                                                '</div> \n';
+                    cards_html +=
+                            '<div style="font-size: 2rem; color: red;"> \n' +
+                                card_number + ' \n' +
+                            '</div> \n';
                 }
 
-                    cards_html +=               '<p class="product-name"> \n' +
-                                                    '<a href="#">دریل پیچ گوشتی شارژی چکشی لیتیوم 18 ولت</a> \n' +
-                                                '</p> \n' +
-                                                '<p class="product-branding"> \n' +
-                                                    '<a asp-controller="product" asp-action="index">محصولات آاگ</a> \n' +
-                                                '</p> \n' +
-                                                '<p class="product-category"> \n' +
-                                                    'مصالح ساختمانی / سنگ نما \n' +
-                                                '</p> \n' +
-                                            '</div> \n' +
-                                            '<div class="product-price"> \n' +
-                                                '<em class="price">380,000</em> \n' +
-                                                '<span>تومان </span> \n' +
-                                            '</div> \n' +
-                                        '</div> \n';
+                cards_html +=
+                            '<p class="card-title"> \n' +
+                                '<a href="javascript:void(0)">Heading link ' + card_number + '</a> \n' +
+                            '</p> \n' +
+                            '<p class="card-caption mb-0">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p> \n' +
+                        '</div> \n';
             }
             else if (opts.type == "img-number") {
-                cards_html +=           '<div class="card-info"> \n' +
-                                            card_number + ' \n' +
-                                        '</div> \n';
+                cards_html +=
+                        '<div class="card-info"> \n' +
+                            card_number + ' \n' +
+                        '</div> \n';
             }
 
             if (opts.type !== "image") {
-                cards_html +=       '</div> \n' +
-                                '</div> \n';
+                cards_html +=
+                    '</div> \n';
             }
 
-            cards_html +=   '</div> \n';
+            cards_html +=
+                '</div> \n';
         });
 
         $(cardPlh).parent()[0].innerHTML = cards_html;
