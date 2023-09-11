@@ -873,7 +873,7 @@
         this._create();
     };
     FCarousel.defaults = {
-        cardAlign: "right",
+        cardAlign: "left",
         // rightToLeft: false,
         friction: 0.28,          // friction when selecting
         freeScrollFriction: 0.075, // friction when free-scrolling
@@ -928,6 +928,8 @@
         this.originSide = this.options.rightToLeft ? 'right' : 'left';
 
         var dirClass = this.options.rightToLeft ? 'is-rtl' : 'is-ltr';
+        var oppDirClass = this.options.rightToLeft ? 'is-ltr' : 'is-rtl';
+        this.element.classList.remove(oppDirClass);
         this.element.classList.add(dirClass);
 
         // this.handles = [];

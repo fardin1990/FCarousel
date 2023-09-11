@@ -77,16 +77,27 @@
         transition: none;
     }
 }
-.f-carousel .car-control-prev {
+.f-carousel.is-rtl .car-control-prev {
     right: 0;
     left: auto;
     border-radius: 0 5px 5px 0;
 }
-.f-carousel .car-control-next {
+.f-carousel.is-rtl .car-control-next {
     left: 0;
     right: auto;
     border-radius: 5px 0 0 5px;
 }
+.f-carousel.is-ltr .car-control-prev {
+    left: 0;
+    right: auto;
+    border-radius: 5px 0 0 5px;
+}
+.f-carousel.is-ltr .car-control-next {
+    right: 0;
+    left: auto;
+    border-radius: 0 5px 5px 0;
+}
+
 .f-carousel .car-control:focus,
 .f-carousel .car-control:hover {
     opacity: 0.9;
@@ -141,19 +152,6 @@
 .scroll-handle-Track {
     cursor: pointer;
 }
-
-
-.ltr .f-carousel .car-control-prev {
-    right: auto;
-    left: 0;
-    border-radius: 3px 0 0 3px;
-}
-.ltr .f-carousel .car-control-next {
-    left: auto;
-    right: 0;
-    border-radius: 0 3px 3px 0;
-}
-
 
 
 /* ---- page dots ---- */

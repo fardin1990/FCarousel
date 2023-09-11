@@ -88,7 +88,8 @@ function createCardElems() {
 
                 cards_html +=
                             '<p class="card-title"> \n' +
-                                '<a href="javascript:void(0)">Heading link ' + card_number + '</a> \n' +
+                                // '<a href="javascript:void(0)">Heading link ' + card_number + '</a> \n' +
+                                '<a href="#">Heading link ' + card_number + '</a> \n' +
                             '</p> \n' +
                             '<p class="card-caption mb-0">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p> \n' +
                         '</div> \n';
