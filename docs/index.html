@@ -11,15 +11,441 @@
 </head>
 <!-- <body class="rtl" style="text-align: right;"> -->
 <body>
+    <header class="site-header"></header>
+
+    <div class="custom-tabs-box control-options-box">
+        <div class="py-2 d-flex justify-content-between">
+            <h2>
+                FCarousel Options:
+            </h2>
+            <span>
+                <button type="button" id="resetOptionsBtn">
+                    reset all changes
+                </button>
+                <button type="button" id="reRunBtn">
+                    run again
+                </button>
+            </span>
+        </div>
+
+        <div class="option-category-tab-list tab-list">
+            <button class="tab-item active" data-tab="pageDirection">
+                Page direction
+            </button>
+            <button class="tab-item" data-tab="carouselType">
+                Carousel type
+            </button>
+            <button class="tab-item" data-tab="attractionAndFriction">
+                Attraction & Friction
+            </button>
+            <button class="tab-item" data-tab="cardsPlacement">
+                Cards placement
+            </button>
+            <button class="tab-item" data-tab="controllingAndHandles">
+                Controlling & handles
+            </button>
+            <button class="tab-item" data-tab="otherOptions">
+                Other options
+            </button>
+        </div>
+
+        <div class="option-category-tabs">
+            <form id="controlOptionForm">
+                <div class="sub-category-tab-content" data-tab-id="pageDirection">
+                    <p>
+                        This will be applied to the entire sample to simulate different page direction.
+                        <br />
+                        (This option is set automatically)
+                    </p>
+                    <div class="sub-category-options">
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="pageDirection" class="" value="ltr" data-option-control="rightToLeft" data-rerun checked />
+                                <span>
+                                    Left to right
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="pageDirection" class="" value="rtl" data-option-control="rightToLeft" data-rerun />
+                                <span>
+                                    Right to left
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-category-tab-content" data-tab-id="carouselType" style="display: none;">
+                    <p>
+                        You can change the style of cards, buttons and those positions by changing the default css or inserting html tags of target items in another place.
+                    </p>
+                    <div class="sub-category-options">
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="carouselType" class="" value="ltr" />
+                                <span>
+                                    Normal
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="carouselType" class="" value="ltr" />
+                                <span>
+                                    Gallery
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="carouselType" class="" value="ltr" />
+                                <span>
+                                    Full width
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <img src="" width="" height="" />
+                                <input type="radio" name="carouselType" class="" value="ltr" />
+                                <span>
+                                    Focused middle card
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-category-tab-content" data-tab-id="attractionAndFriction" style="display: none;">
+                    <div class="sub-category-options">
+                        <div>
+                            <label>
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="friction" value="0.28" />
+                                <span>
+                                    friction
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="freeScrollFriction" value="0.075" />
+                                <span>
+                                    free scroll friction
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="range" min="0" max="1" step="0.005" data-option-control="selectedAttraction" value="0.025" />
+                                <span>
+                                    selected attraction
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="freeScroll" checked />
+                                <span>
+                                    free scroll
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-category-tab-content" data-tab-id="cardsPlacement" style="display: none;">
+                    <div class="sub-category-options">
+                        <div>
+                            <div>
+                                Card align
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="left" data-rerun checked />
+                                    <span>
+                                        left
+                                    </span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="center" data-rerun />
+                                    <span>
+                                        center
+                                    </span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="right" data-rerun />
+                                    <span>
+                                        right
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="wrapAround" />
+                                <span>
+                                    Wrap around
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="contain" data-rerun checked />
+                                <span>
+                                    Contain
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="discretePlacement" checked />
+                                <span>
+                                    Discrete placement
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="onStepsPlacement" data-rerun />
+                                <span>
+                                    On steps placement
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <div>
+                                Step
+                            </div>
+                            <div>
+                                <div>
+                                    <span>
+                                        choose a number
+                                    </span>
+                                    <input type="radio" name="stepType" data-option-control="step" checked />
+                                    <input type="number" min="1" data-option-control="step" value="1" />
+                                </div>
+                                <div>
+                                    <span>
+                                        auto step
+                                    </span>
+                                    <input type="radio" name="stepType" data-option-control="step" value="p" />
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label>
+                                <span>
+                                    initial index
+                                </span>
+                                <input type="number" min="0" data-option-control="initialIndex" value="0" data-rerun />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-category-tab-content" data-tab-id="controllingAndHandles" style="display: none;">
+                    <div class="sub-category-options">
+                        <div>
+                            <label>
+                                draggable
+                            </label>
+                            <div>
+                                <select data-option-control="draggable">
+                                    <option>true</option>
+                                    <option>&quot;&gt; 1&quot; (when there are more than one item)</option>
+                                    <option>false</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="number" min="1" data-option-control="dragThreshold" value="3" />
+                                <span>
+                                    Drag threshold
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="scrollbar" />
+                                <span>
+                                    scrollbar
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="scrollbarMutualControl" checked />
+                                <span>
+                                    scrollbar mutual control
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="number" min="10" data-option-control="minScrollThumbWidth" value="20" />
+                                <span>
+                                    minimum scrollbar thumbnail width
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="prevNextButtons" checked />
+                                <span>
+                                    have previous and next buttons
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <textarea rows="2" data-option-control="leftBtnIcon"></textarea>
+                                <span>
+                                    left button icon html
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <textarea rows="2" data-option-control="rightBtnIcon"></textarea>
+                                <span>
+                                    right button icon html
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="pageDots"data-rerun />
+                                <span>
+                                    having dots (pageDots)
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="asNavFor" />
+                                <span>
+                                    as nav for
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="accessibility" data-rerun />
+                                <span>
+                                    accessibility
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="autoPlay" />
+                                <span>
+                                    Auto play
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="pauseAutoPlayOnHover" />
+                                <span>
+                                    pause auto pay on mouse hovering
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-category-tab-content" data-tab-id="otherOptions" style="display: none;">
+                    <div class="sub-category-options">
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="fade" data-rerun />
+                                <span>
+                                    fade
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="lazyLoad" checked />
+                                <span>
+                                    lazyLoad
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="text" data-option-control="beforeLazyLoadPrepareClass" />
+                                <span>
+                                    prepare class for before images lazy loading
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="text" data-option-control="afterLazyLoadPrepareClass" />
+                                <span>
+                                    prepare class for after images lazy loading
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="nonUniSize" data-rerun />
+                                <span>
+                                    non uniSize
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="adaptiveHeight" data-rerun />
+                                <span>
+                                    adaptive height
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="checkbox" data-option-control="setGallerySize" data-rerun checked />
+                                <span>
+                                    set gallery size
+                                </span>
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                card selector
+                            </label>
+                            <div>
+                                <input type="text" data-option-control="cardSelector" value="" />
+                            </div>
+                        </div>
+                        <div>
+                            <label>
+                                namespaceJQueryEvents
+                            </label>
+                            <div>
+                                <input type="text" data-option-control="namespaceJQueryEvents" checked />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="auto-container">
         <main class="mainContent my-5">
             <section id="sample_carousel_1_section" class="slider-cards-list">
                 <div class="slideshow-container draggable shadow bg-white rounded-lg box-padding" >
-                    <div class="section-heading">
-                        <h2 class="heading">Sample Carousel</h2>
-                    </div>
-                    <div class="mb-3">
-                        change the controls bellow to change carousel options
+                    <div class="section-heading d-flex justify-content-between">
+                        <h2 class="heading">
+                            Sample Carousel
+                        </h2>
                     </div>
                     <div id="sample_carousel_1" class="f-carousel my-3" data-carousel='{"rightBtnIcon": "icon icon-arr_right", "leftBtnIcon": "icon icon-arr_left", "draggable": ">1", "freeScroll": true}'>
                         <div class="slider-cards-container">
@@ -35,358 +461,6 @@
                         </button>
                     </div>
                 </div>
-            </section>
-
-            <section class="bg-white shadow rounded-lg box-padding" dir="ltr">
-                <form id="controlOptionForm">
-                    <div class="py-2 d-flex justify-content-between">
-                        <h2>
-                            FCarousel Options:
-                        </h2>
-                        <span>
-                            <button type="button" id="resetOptionsBtn">
-                                reset all changes
-                            </button>
-                            <button type="button" id="reRunBtn">
-                                run again
-                            </button>
-                        </span>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                cardAlign
-                            </label>
-                            <div>
-                                <label>
-                                    <span>
-                                        left
-                                    </span>
-                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="left" data-rerun checked />
-                                </label>
-                                <label>
-                                    <span>
-                                        center
-                                    </span>
-                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="center" data-rerun />
-                                </label>
-                                <label>
-                                    <span>
-                                        right
-                                    </span>
-                                    <input type="radio" name="cardAlign" data-option-control="cardAlign" value="right" data-rerun />
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                right to left
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="rightToLeft" data-rerun />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                friction 
-                            </label>
-                            <div>
-                                <input type="range" min="0" max="1" step="0.005" data-option-control="friction" value="0.28" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                free scroll friction
-                            </label>
-                            <div>
-                                <input type="range" min="0" max="1" step="0.005" data-option-control="freeScrollFriction" value="0.075" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                selected attraction
-                            </label>
-                            <div>
-                                <input type="range" min="0" max="1" step="0.005" data-option-control="selectedAttraction" value="0.025" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                discrete placement
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="discretePlacement" checked />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                wrap around
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="wrapAround" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                scrollbar
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="scrollbar" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                scrollbar mutual control
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="scrollbarMutualControl" checked />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                contain
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="contain" data-rerun checked />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                step
-                            </label>
-                            <div>
-                                <label>
-                                    <span>
-                                        choose a number
-                                    </span>
-                                    <input type="radio" name="stepType" data-option-control="step" checked />
-                                    <input type="number" min="1" data-option-control="step" value="1" />
-                                </label>
-                                <label>
-                                    <span>
-                                        page
-                                    </span>
-                                    <input type="radio" name="stepType" data-option-control="step" value="p" />
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                on steps placement
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="onStepsPlacement" data-rerun />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                initial index
-                            </label>
-                            <div>
-                                <input type="number" min="0" data-option-control="initialIndex" value="0" data-rerun />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                free scroll
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="freeScroll" checked />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                non uniSize
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="nonUniSize" data-rerun />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                accessibility
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="accessibility" data-rerun />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                adaptive height
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="adaptiveHeight" data-rerun />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                set gallery size
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="setGallerySize" data-rerun checked />
-                            </div>
-                        </div>
-                        <!-- <div class="col">
-                            <label>
-                                card selector
-                            </label>
-                            <div>
-                                <input type="text" data-option-control="cardSelector" value="" />
-                            </div>
-                        </div> -->
-                    </div>
-
-                    <!-- data-rerun checked -->
-
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                fade
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="fade" data-rerun />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                draggable
-                            </label>
-                            <div>
-                                <select data-option-control="draggable">
-                                    <option>true</option>
-                                    <option>&quot;&gt; 1&quot; (when there are more than one item)</option>
-                                    <option>false</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                drag threshold
-                            </label>
-                            <div>
-                                <input type="number" min="1" data-option-control="dragThreshold" value="3" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                minimum scrollbar thumbnail width
-                            </label>
-                            <div>
-                                <input type="number" min="10" data-option-control="minScrollThumbWidth" value="20" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                left button icon html
-                            </label>
-                            <div>
-                                <textarea rows="2" data-option-control="leftBtnIcon"></textarea>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                right button icon html
-                            </label>
-                            <div>
-                                <textarea rows="2" data-option-control="rightBtnIcon"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                have previous and next buttons
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="prevNextButtons" checked />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                having dots (pageDots)
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="pageDots"data-rerun />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                as nav for
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="asNavFor" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                auto play
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="autoPlay" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                pause auto pay on mouse hovering
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="pauseAutoPlayOnHover" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label>
-                                lazyLoad
-                            </label>
-                            <div>
-                                <input type="checkbox" data-option-control="lazyLoad" checked />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                prepare class for before images lazy loading
-                            </label>
-                            <div>
-                                <input type="text" data-option-control="beforeLazyLoadPrepareClass" />
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label>
-                                prepare class for after images lazy loading
-                            </label>
-                            <div>
-                                <input type="text" data-option-control="afterLazyLoadPrepareClass" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <!-- <div class="col">
-                            <label>
-                                namespaceJQueryEvents
-                            </label>
-                            <div>
-                                <input type="text" data-option-control="namespaceJQueryEvents" checked />
-                            </div>
-                        </div> -->
-                    </div>
-                </form>
             </section>
         </main>
     </div>

@@ -242,6 +242,23 @@ createCardElems();
 
 
 $(document).ready(function () {
+
+    $(".custom-tabs-box [data-tab]").on("click", function (evt) {
+        var btnElem = this;
+        var parentElem = $(btnElem).parents(".custom-tabs-box")[0];
+        var tabBtns = $(parentElem).find("[data-tab]");
+        var targetId = $(btnElem).data("tab");
+        var tabElems = $(parentElem).find("[data-tab-id]");
+        var targetTabElem = $(parentElem).find("[data-tab-id='" + targetId + "']")[0];
+
+        $(tabBtns).removeClass("active");
+        $(btnElem).addClass("active");
+
+        $(tabElems).css("display", "none");
+        $(targetTabElem).css("display", "");
+    });
+    
+    
     var sampleCarouselElem = $("#sample_carousel_1")[0];
     var controlOptionFormElem = $("#controlOptionForm")[0];
     var controlOptionInputs = $(controlOptionFormElem).find("[data-option-control]");
@@ -262,12 +279,13 @@ $(document).ready(function () {
     });
 
     $("#resetOptionsBtn").on("click", function () {
-        $(controlOptionFormElem)[0].reset();
+        $(controlOptionFormElem)[0]?.reset();
         changeCarouselOptions(sampleCarouselElem);
     });
 
     $("#reRunBtn").on("click", function () {
         reRunCarousel(sampleCarouselElem);
     });
+
 });
 
