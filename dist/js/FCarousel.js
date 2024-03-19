@@ -1095,7 +1095,12 @@
             var lastSelectableCard = this.cards[this.lastIndex];
             // lastSelectableCard.originalTarget = contentWidth - this.viewportWidth;
             lastSelectableCard.target = contentWidth - this.viewportWidth + this.cursorPosition;
-            this.cards[0].target = this.cursorPosition;
+
+            var counter = 0;
+            while(this.cursorPosition >= this.cards[counter].target) {
+                this.cards[counter].target = this.cursorPosition;
+                counter++;
+            }
         }
     };
 
