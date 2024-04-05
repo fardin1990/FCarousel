@@ -57,7 +57,7 @@ if (window.addEventListener && window.requestAnimationFrame && document.getEleme
                     bL, bR, imgBCR, p = 0, i = 0,
                     loading_hrefs = [], item_href;
                 while (p < pl_pItem.length) {
-                    caros_view_box = $(pl_pItem).closest(".slider-cards-container")[0];
+                    caros_view_box = $(pl_pItem).closest(".fcarousel-items-container")[0];
                     bL = caros_view_box ? caros_view_box.getBoundingClientRect().left : 0;
                     bR = caros_view_box ? caros_view_box.getBoundingClientRect().right : $(window).innerWidth();
 

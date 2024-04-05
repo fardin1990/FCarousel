@@ -1,4 +1,4 @@
-.f-carousel {
+.fcarousel {
     position: relative;
     outline: none;
 }
@@ -8,7 +8,7 @@
     pointer-events: none;
 }
 
-.f-carousel-enabled.is-draggable {
+.fcarousel-enabled.is-draggable {
     -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -19,22 +19,24 @@
     cursor: -webkit-grab;
     cursor: grab;
 }
-.f-carousel.is-dragging .f-carousel-items {
+.fcarousel.is-dragging .fcarousel-items {
     cursor: move;
     /*cursor: w-resize;*/
     cursor: -webkit-grabbing;
     cursor: grabbing;
 }
-.f-carousel .f-carousel-items {
+.fcarousel-items {
+    display: flex;
+    align-items: flex-start;
     position: relative;
     height: 100%;
 }
-.f-carousel .f-carousel-items::after {
+.fcarousel-items::after {
     display: block;
     clear: both;
     content: "";
 }
-/* .f-carousel .f-carousel-items .item.active {
+/* .fc-item.active {
     display: block;
 } */
 .car-control.inactive {
@@ -46,7 +48,7 @@
 }
 
 
-.f-carousel .car-control {
+.fcarousel .car-control {
     position: absolute;
     top: 50%;
     -webkit-transform: translateY(-50%);
@@ -68,67 +70,70 @@
     -ms-user-select: none;
     user-select: none;
 }
-.f-carousel .car-control.disabled,
-.f-carousel .car-control:disabled {
+.fcarousel .car-control.disabled,
+.fcarousel .car-control:disabled {
     opacity: 0.25 !important;
 }
 @media (prefers-reduced-motion: reduce) {
-    .f-carousel .car-control {
+    .fcarousel .car-control {
         transition: none;
     }
 }
-.f-carousel.is-rtl .car-control-prev {
+.fcarousel.is-rtl .car-control-prev {
     right: 0;
     left: auto;
     border-radius: 0 5px 5px 0;
 }
-.f-carousel.is-rtl .car-control-next {
+.fcarousel.is-rtl .car-control-next {
     left: 0;
     right: auto;
     border-radius: 5px 0 0 5px;
 }
-.f-carousel.is-ltr .car-control-prev {
+.fcarousel.is-ltr .car-control-prev {
     left: 0;
     right: auto;
     border-radius: 5px 0 0 5px;
 }
-.f-carousel.is-ltr .car-control-next {
+.fcarousel.is-ltr .car-control-next {
     right: 0;
     left: auto;
     border-radius: 0 5px 5px 0;
 }
 
-.f-carousel .car-control:focus,
-.f-carousel .car-control:hover {
+.fcarousel .car-control:focus,
+.fcarousel .car-control:hover {
     opacity: 0.9;
     text-decoration: none;
     outline: 0;
 }
-.f-carousel .car-control .icon {
+.fcarousel .car-control .icon {
     font-size: 1.5rem;
     display: inline-block;
 }
-.f-carousel .car-control:hover .icon {
+.fcarousel .car-control:hover .icon {
     transform: scale(1.2);
 }
 
+.fcarousel .icon-arr_left::before,
+.fcarousel .icon-arr_right::before {
+    display: block;
+    line-height: 0;
+}
+.fcarousel.is-ltr .icon-arr_left::before,
+.fcarousel.is-rtl .icon-arr_right::before {
+    content: "<";
+}
+.fcarousel.is-ltr .icon-arr_right::before,
+.fcarousel.is-rtl .icon-arr_left::before {
+    content: ">";
+}
 
-.slider-cards-container {
+
+.fcarousel-items-container {
     overflow: hidden;
     white-space: nowrap;
 }
-/* .slider-cards-container .card {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: row;
-    flex-direction: row;
-    -webkit-flex-wrap: nowrap;
-    flex-wrap: nowrap;
-} */
-/* .slider-cards-wrapper {
-    white-space: normal;
-} */
-.f-carousel-items .card {
+.fc-item {
     display: inline-block;
     position: relative;
     direction: rtl;
@@ -137,7 +142,7 @@
 }
 
 
-/* .f-carousel-items .card-info > div:first-child {
+/* .fc-item .card-info > div:first-child {
     touch-action: pan-y;
 } */
 
@@ -156,7 +161,7 @@
 
 /* ---- page dots ---- */
 
-.f-carousel-page-dots {
+.fcarousel-page-dots {
     position: absolute;
     width: 100%;
     bottom: -25px;
@@ -166,10 +171,10 @@
     text-align: center;
     line-height: 1;
 }
-.f-carousel-rtl .f-carousel-page-dots {
+.fcarousel-rtl .fcarousel-page-dots {
     direction: rtl;
 }
-.f-carousel-page-dots .dot {
+.fcarousel-page-dots .dot {
     display: inline-block;
     width: 10px;
     height: 10px;
@@ -179,43 +184,7 @@
     opacity: 0.25;
     cursor: pointer;
 }
-.f-carousel-page-dots .dot.is-selected {
+.fcarousel-page-dots .dot.is-selected {
     opacity: 1;
 }
 
-
-.one_card_in_front-wrapper {
-    overflow: hidden;
-}
-.one_card_in_front {
-    margin: 0 auto;
-}
-.one_card_in_front .slider-cards-container {
-    overflow: visible;
-}
-.one_card_in_front .card {
-    width: 100%;
-    opacity: 0.5;
-    transition: opacity 0.25s ease-out;
-}
-.one_card_in_front .card.is-selected {
-    opacity: 1;
-}
-
-.one_card_in_front .scroll-handle-Track {
-    background-color: #d7dcf5;
-    width: 250px;
-    height: 5px;
-    margin: 1rem auto 0.5rem;
-    border-radius: 3px;
-    cursor: default;
-}
-.one_card_in_front .scroll-handle {
-    height: inherit;
-    width: 25%;
-    background-color: #4379bd;
-    border-radius: 3px;
-    display: inline-block;
-    position: absolute;
-    /* min-width: 75px; */
-}

@@ -61,7 +61,7 @@ function createCardElems() {
             var card_number = index + 1;
 
             cards_html +=
-                '<div class="card item carousel-card' + ' ' + card_class + '"> \n';
+                '<div class="fc-item carousel-item card' + ' ' + card_class + '"> \n';
             
             if (opts.type !== "image") {
                 cards_html +=
@@ -110,7 +110,8 @@ function createCardElems() {
                 '</div> \n';
         });
 
-        $(cardPlh).parent()[0].innerHTML = cards_html;
+        $(cardPlh).parent().prepend(cards_html);
+        $(cardPlh).remove();
         // $(cardPlh).remove();
     })
 }
@@ -165,7 +166,7 @@ function getCurrentCustomOptions() {
         var optKey = $(targetInput).data("option-control");
 
         if (optKey === "nonUniSize") {
-            var carouselCards = $("#sample_carousel_1").find(".item");
+            var carouselCards = $("#sample_carousel_1").find(".carousel-item");
             if ($(targetInput)[0].checked) {
                 $(carouselCards).each(function () {
                     var cardElem = this;

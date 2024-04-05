@@ -100,6 +100,56 @@
     return EvEmitter;
 });
 
+/**
+ * matchesSelector v2.0.2
+ * matchesSelector(element, '.selector')
+ * MIT license
+ */
+/*jshint browser: true, strict: true, undef: true, unused: true */
+(function(window, factory) {
+    /*global define: false, module: false */
+    'use strict';
+    // universal module definition
+    if (typeof define == 'function' && define.amd) {
+        // AMD
+        define('desandro-matches-selector/matches-selector',factory);
+    } else if (typeof module == 'object' && module.exports) {
+        // CommonJS
+        module.exports = factory();
+    } else {
+        // browser global
+        window.matchesSelector = factory();
+    }
+})(window, function factory() {
+    'use strict';
+
+    var matchesMethod = (function() {
+        var ElemProto = window.Element.prototype;
+        // check for the standard method name first
+        if (ElemProto.matches) {
+            return 'matches';
+        }
+        // check un-prefixed
+        if (ElemProto.matchesSelector) {
+            return 'matchesSelector';
+        }
+        // check vendor prefixes
+        var prefixes = ['webkit', 'moz', 'ms', 'o'];
+
+        for (var i=0; i < prefixes.length; i++) {
+            var prefix = prefixes[i];
+            var method = prefix + 'MatchesSelector';
+            if (ElemProto[method]) {
+                return method;
+            }
+        }
+    })();
+
+    return function matchesSelector(elem, selector) {
+        return elem[matchesMethod](selector);
+    };
+});
+
 // utils
 (function (window, factory) {
     window.utils = factory();
@@ -140,6 +190,16 @@
         }
         // array of single index
         return [obj];
+    };
+
+    // ----- getParent ----- //
+    utils.getParent = function(elem, selector) {
+        while (elem.parentNode && elem != document.body) {
+            elem = elem.parentNode;
+            if (matchesSelector(elem, selector)) {
+                return elem;
+            }
+        }
     };
 
     // ----- getQueryElement ----- //
@@ -872,6 +932,7 @@
         this.options = $.extend(elemOptions, options);
         this._create();
     };
+
     FCarousel.defaults = {
         cardAlign: "left",
         // rightToLeft: false,
@@ -893,10 +954,11 @@
         // setGallerySize: true,
         // cardSelector: undefined
     };
+
     FCarousel.selectors = {
-        viewport: ".slider-cards-container",
-        slider: ".f-carousel-items",
-        cards: ".card",
+        viewport: ".fcarousel-items-container",
+        slider: ".fcarousel-items",
+        cards: ".fc-item",
     };
 
     FCarousel.createMethods = [];
@@ -977,7 +1039,7 @@
         this.emitEvent("activate");
         this.selectInitialIndex();
         
-        this.element.classList.add("f-carousel-enabled");
+        this.element.classList.add("fcarousel-enabled");
 
         // flag for initial activation, for using initialIndex
         this.isInitActivated = true;
@@ -990,11 +1052,30 @@
     proto.addViewport = function () {
         var selector = this.constructor.selectors.viewport,
             viewportElem = $(this.element).find(selector)[0];
+
+        if (!viewportElem) {
+            viewportElem = document.createElement("div");
+            viewportElem.classList.add(selector.replace(".", ""));
+            this.element.prepend(viewportElem);
+        }
         this.viewport = viewportElem;
     };
     proto.addSlider = function () {
         var selector = this.constructor.selectors.slider,
             sliderElem = $(this.element).find(selector)[0];
+
+        if (!sliderElem) {
+            sliderElem = document.createElement("div");
+            sliderElem.classList.add(selector.replace(".", ""));
+            this.viewport.prepend(sliderElem);
+        }
+        else {
+            var viewportSelector = this.constructor.selectors.viewport;
+            var parentViewport = utils.getParent(sliderElem, viewportSelector);
+            if (!parentViewport) {
+                this.viewport.prepend(sliderElem);
+            }
+        }
         this.slider = sliderElem;
     };
 
@@ -1041,13 +1122,16 @@
     };
     proto.identifyCards = function () {
         var selector = this.constructor.selectors.cards,
-            // cardElems = $(this.element).find(selector),
-            cardElems = $(this.slider).find(selector),
+            cardElems = $(this.element).find(selector),
             _this = this;
 
-        // get cards from children
-        // this.cards = Array.from(cardElems).map(function (elem) {
         this.cards = utils.makeArray(cardElems).map(function (elem) {
+            var sliderSelector = _this.constructor.selectors.slider;
+            var parentSlider = utils.getParent(elem, sliderSelector);
+            if (!parentSlider) {
+                _this.slider.append(elem);
+            }
+
             return new Card(elem, _this);
         });
     };
@@ -1628,7 +1712,7 @@
         if ( !this.isActive ) {
             return;
         }
-        this.element.classList.remove("f-carousel-enabled");
+        this.element.classList.remove("fcarousel-enabled");
         this.unselectSelectedCard();
         // destroy cards
         this.cards.forEach( function(card) {
@@ -3025,83 +3109,52 @@
         var leftDirection = this.parent.options.rightToLeft ? 1 : -1;
         this.isLeft = this.direction == leftDirection;
 
-        // var element = this.element = document.createElement('button');
-        // element.className = 'car-control';
-        // element.className += this.isPrevious ? ' car-control-prev' : ' car-control-next';
-        // // prevent button from submitting form
-        // element.setAttribute( 'type', 'button' );
-
         var parent = this.parent,
             selectors = parent.constructor.selectors,
-            btnSelector = this.isPrevious ? selectors.previousButton : selectors.nextButton;
-
-        // // this.controllButtons = $(parent.element).find(selectors.controllButtons)[0];
-        // this.previousButton = $(parent.element).find(btnSelector)[0];
-
-        var btnElem = this.element = $(parent.element).find(btnSelector)[0];
-
+            btnSelector = this.isPrevious ? selectors.previousButton : selectors.nextButton,
+            element = this.parent.element.querySelector(btnSelector);
+        if (!element) {
+            element = document.createElement('button');
+            element.className = selectors.controllButtons.replace(".", "");
+            element.className += ' ' + btnSelector.replace(".", "");
+            // create button arrow icons
+            var iconElem = this.createIconElem();
+            element.appendChild(iconElem);
+        }
+        element.setAttribute('type', 'button');
+        this.element = element;
         // init as disabled
         this.disable();
 
-        // element.setAttribute( 'aria-label', this.isPrevious ? 'Previous' : 'Next' );
-        btnElem.setAttribute('aria-label', this.isPrevious ? 'Previous' : 'Next');
-
-        // var leftIcon = this.parent.options.leftBtnIcon,
-        //   rightIcon = this.parent.options.rightBtnIcon;
-        // if (leftIcon && rightIcon) {
-        //   var iconElem = document.createElement("span");
-        //   iconElem.className = this.isLeft ? leftIcon : rightIcon;
-        //   element.appendChild(iconElem);
-        // }
-
-        // if (false) {
-        //   // create arrow
-        //   var svg = this.createSVG();
-        //   element.appendChild( svg );
-        // }
-        // this.parent.element.appendChild(element);
+        element.setAttribute( 'aria-label', this.isPrevious ? 'Previous' : 'Next' );
 
         // events
         this.parent.on('select', this.update.bind(this));
-
-        // this.activate();
     };
 
     PrevNextBtn.prototype.activate = function () {
         this.bindStartEvent(this.element);
-        // var parent = this.parent;
-
-        // if (this.direction == -1) {
-        //     // در صورت صورت استفاده از هر یک از این دو مورد پایینی عبارت "this" 
-        //     // در "فانکشن مقصد" برابر با خود "تگ دکمه" می شود که در این صورت دسترسی به شی پرنت که حاوی
-        //     // تگ کاروسل والد و همچنین آپشن ها و فانکشن های آن است وجود نخواهد داشت
-        //     this.element.onclick = parent.prev;
-        //     // $(this.element).on("click", parent.prev);
-        // } else {
-        //     // مشابه مورد بالایی
-        // }
-
-        // در حالت عادی در صورت استفاده از عبارتی مثل عبارت پایین، چون در
-        // زمان تعریف (همین جا، چون این خطها در زمان لود اجرا می شوند) عبارت "this"
-        // به شی دکمه (منظور از شی، تگ نیست) اشاره دارد که اصلا یک فانکشن هم نیست هیچ اتفاقی نمی افتد
-        // پس برای هندل کردن درست عملکرد (فرستادن یک "دیس مناسب" و ارجاع به فانکشن مربوطه)
-        // باید از "utils.handleEvent" کمک بگیریم
         this.element.addEventListener('click', this);
-        // توضیحات بیشتر در این آدرس :
-        // https://dev.to/rikschennink/the-fantastically-magical-handleevent-function-1bp4
-        // توسط جستجوی این عبارت در گوگل
-        // how the handleEvent in utils.handleEvent called
-
-        // add to DOM
-        // this.parent.element.appendChild(this.element);
+        if (!this.element.parentNode) {
+            // add to DOM
+            this.parent.element.appendChild(this.element);
+        }
     };
 
     PrevNextBtn.prototype.deactivate = function() {
         // remove from DOM
-        // this.parent.element.removeChild( this.element );
+        this.parent.element.removeChild( this.element );
         // click events
         this.unbindStartEvent(this.element);
         this.element.removeEventListener('click', this);
+    };
+
+    PrevNextBtn.prototype.createIconElem = function () {
+        var iconElem = document.createElement("span");
+        iconElem.className = this.isLeft ?
+            this.parent.options.leftBtnIconClass :
+            this.parent.options.rightBtnIconClass;
+        return iconElem;
     };
 
     PrevNextBtn.prototype.handleEvent = utils.handleEvent;
@@ -3150,15 +3203,11 @@
     // -------------------------- FCarousel prototype -------------------------- //
     $.extend(FCarousel.defaults, {
         prevNextButtons: true,
-        // arrowShape: {
-        //   x0: 10,
-        //   x1: 60, y1: 50,
-        //   x2: 70, y2: 40,
-        //   x3: 30
-        // }
+        leftBtnIconClass: "icon icon-arr_left",
+        rightBtnIconClass: "icon icon-arr_right",
     });
     $.extend(FCarousel.selectors, {
-        // controllButtons: ".car-control",
+        controllButtons: ".car-control",
         previousButton: ".car-control-prev",
         nextButton: ".car-control-next"
     });
@@ -3215,7 +3264,7 @@
     PageDots.prototype._create = function() {
         // create holder element
         this.holder = document.createElement('ol');
-        this.holder.className = 'f-carousel-page-dots';
+        this.holder.className = 'fcarousel-page-dots';
         // create dots, array of elements
         this.dots = [];
         // events
